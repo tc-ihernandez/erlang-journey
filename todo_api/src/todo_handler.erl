@@ -35,13 +35,15 @@ handle_event(_Event, _Data, _Args) ->
 %%%===================================================================
 
 %% List all todos: GET /todos with optional query parameters
-%% Supports: ?completed=true/false, ?page=1, ?limit=10, ?search=keyword, ?tags=tag1,tag2
+%% Supports: ?completed=true/false, ?page=1, ?limit=10, ?search=keyword, ?tags=tag1,tag2, ?sort_by=field, ?order=asc/desc
 handle_request('GET', [<<"todos">>], Req) ->
     CompletedFilter = elli_request:get_arg(<<"completed">>, Req, undefined),
     PageParam = elli_request:get_arg(<<"page">>, Req, undefined),
     LimitParam = elli_request:get_arg(<<"limit">>, Req, undefined),
     SearchParam = elli_request:get_arg(<<"search">>, Req, undefined),
     TagsParam = elli_request:get_arg(<<"tags">>, Req, undefined),
+    SortBy = elli_request:get_arg(<<"sort_by">>, Req, undefined),
+    Order = elli_request:get_arg(<<"order">>, Req, <<"asc">>),
     
     % Parse pagination parameters
     {UsePagination, Page, Limit} = case {PageParam, LimitParam} of
@@ -59,27 +61,30 @@ handle_request('GET', [<<"todos">>], Req) ->
         TagsBin -> binary:split(TagsBin, <<",">>, [global])
     end,
     
-    % Get todos based on filters and pagination
-    Result = case {CompletedFilter, SearchParam, Tags, UsePagination} of
-        {undefined, undefined, undefined, false} ->
+    % Get todos based on filters, sorting, and pagination
+    Result = case {SortBy, CompletedFilter, SearchParam, Tags, UsePagination} of
+        {SortField, undefined, undefined, undefined, false} when SortField /= undefined ->
+            % Sorting only
+            todo_db:read_all_sorted(SortField, Order);
+        {undefined, undefined, undefined, undefined, false} ->
             % No filters, no pagination
             todo_db:read_all();
-        {undefined, undefined, undefined, true} ->
+        {undefined, undefined, undefined, undefined, true} ->
             % Only pagination
             todo_db:read_all_paginated(Page, Limit);
-        {<<"true">>, undefined, undefined, _} ->
+        {undefined, <<"true">>, undefined, undefined, _} ->
             % Filter by completed
             todo_db:read_by_status(true);
-        {<<"false">>, undefined, undefined, _} ->
+        {undefined, <<"false">>, undefined, undefined, _} ->
             % Filter by pending
             todo_db:read_by_status(false);
-        {undefined, Search, undefined, _} when Search /= undefined ->
+        {undefined, undefined, Search, undefined, _} when Search /= undefined ->
             % Search
             {ok, search_todos(Search)};
-        {undefined, undefined, TagList, _} when TagList /= undefined ->
+        {undefined, undefined, undefined, TagList, _} when TagList /= undefined ->
             % Filter by tags
             todo_db:read_by_tags(TagList);
-        {_, _, _, _} ->
+        {_, _, _, _, _} ->
             % Invalid combination or completed with invalid value
             case CompletedFilter of
                 undefined -> todo_db:read_all();
@@ -289,6 +294,30 @@ handle_request('GET', [<<"tags">>], _Req) ->
     case todo_db:get_all_tags() of
         {ok, Tags} ->
             json_response(200, #{<<"tags">> => Tags});
+        {error, Reason} ->
+            json_response(500, #{<<"error">> => format_error(Reason)})
+    end;
+
+%% Audit history for specific TODO: GET /todos/:id/history
+handle_request('GET', [<<"todos">>, IdBin, <<"history">>], _Req) ->
+    try binary_to_integer(IdBin) of
+        Id ->
+            case audit_log:get_history(Id) of
+                {ok, History} ->
+                    json_response(200, #{<<"history">> => History});
+                {error, Reason} ->
+                    json_response(500, #{<<"error">> => format_error(Reason)})
+            end
+    catch
+        _:_ ->
+            json_response(400, #{<<"error">> => <<"Invalid todo ID">>})
+    end;
+
+%% All audit history: GET /api/audit
+handle_request('GET', [<<"api">>, <<"audit">>], _Req) ->
+    case audit_log:get_all_history() of
+        {ok, History} ->
+            json_response(200, #{<<"history">> => History});
         {error, Reason} ->
             json_response(500, #{<<"error">> => format_error(Reason)})
     end;

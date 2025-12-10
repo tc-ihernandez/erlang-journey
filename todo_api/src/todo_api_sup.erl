@@ -40,6 +40,15 @@ init([]) ->
             type => worker,
             modules => [todo_db]
         },
+        % Audit log
+        #{
+            id => audit_log,
+            start => {audit_log, start_link, []},
+            restart => permanent,
+            shutdown => 5000,
+            type => worker,
+            modules => [audit_log]
+        },
         % Rate limiter
         #{
             id => rate_limiter,

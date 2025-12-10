@@ -1,447 +1,310 @@
 {
 	"info": {
-		"_postman_id": "todo-api-erlang-001",
-		"name": "TODO API - Erlang",
-		"description": "Complete REST API for managing TODO items built with Erlang, Elli, and Mnesia.\n\n## Features\n- Full CRUD operations\n- CORS support\n- Filtering by completion status\n- Pagination\n- Search functionality\n- Timestamps tracking\n\n## Base URL\nhttp://localhost:8000\n\n## Documentation\nhttps://github.com/tc-ihernandez/erlang-journey/tree/main/todo_api",
+		"_postman_id": "todo-api-erlang-v2",
+		"name": "TODO API - Erlang (Advanced)",
+		"description": "Complete REST API for managing TODO items with advanced features:\n- Full CRUD operations\n- Tags system\n- Priority levels (low, medium, high, urgent)\n- Due dates\n- Soft delete + restore\n- Bulk operations\n- Audit log/history\n- Advanced sorting\n- Rate limiting\n- Statistics dashboard\n- CORS support\n- Pagination & Search\n\n## Base URL\nhttp://localhost:8000\n\n## New Features\n✨ Tags system\n✨ Priority & Due Dates  \n✨ Audit log (history tracking)\n✨ Advanced sorting\n✨ Rate limiting (100 req/min)\n✨ Statistics endpoint\n\n## Documentation\nhttps://github.com/tc-ihernandez/erlang-journey/tree/main/todo_api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Health Check",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{base_url}}/health",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"health"
-					]
-				},
-				"description": "Check if the API is running and healthy."
-			},
-			"response": [
+			"name": "Basic Operations",
+			"item": [
 				{
-					"name": "Success",
-					"originalRequest": {
+					"name": "Health Check",
+					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
 							"raw": "{{base_url}}/health",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"health"
-							]
+							"host": ["{{base_url}}"],
+							"path": ["health"]
 						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"cookie": [],
-					"body": "{\n  \"status\": \"ok\"\n}"
-				}
-			]
-		},
-		{
-			"name": "Create TODO",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"if (pm.response.code === 201) {",
-							"    var jsonData = pm.response.json();",
-							"    pm.environment.set(\"todo_id\", jsonData.id);",
-							"    pm.test(\"TODO created successfully\", function () {",
-							"        pm.expect(jsonData.id).to.be.a('number');",
-							"        pm.expect(jsonData.title).to.eql(pm.request.body.raw.title);",
-							"    });",
-							"}"
-						],
-						"type": "text/javascript"
 					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"title\": \"Learn Erlang\",\n  \"description\": \"Master functional programming and OTP\"\n}"
 				},
-				"url": {
-					"raw": "{{base_url}}/todos",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"todos"
-					]
-				},
-				"description": "Create a new TODO item. Only title is required."
-			},
-			"response": [
 				{
-					"name": "Success",
-					"originalRequest": {
+					"name": "Create TODO with Advanced Fields",
+					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"title\": \"Learn Erlang\",\n  \"description\": \"Master functional programming and OTP\"\n}"
+							"raw": "{\n  \"title\": \"Learn Erlang OTP\",\n  \"description\": \"Master supervision trees and gen_server\",\n  \"tags\": [\"learning\", \"erlang\", \"otp\"],\n  \"priority\": \"high\",\n  \"due_date\": 1765500000\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/todos",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"todos"
-							]
+							"host": ["{{base_url}}"],
+							"path": ["todos"]
 						}
-					},
-					"status": "Created",
-					"code": 201,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"cookie": [],
-					"body": "{\n  \"id\": 1,\n  \"title\": \"Learn Erlang\",\n  \"description\": \"Master functional programming and OTP\",\n  \"completed\": false,\n  \"created_at\": 1702234567,\n  \"updated_at\": 1702234567\n}"
-				}
-			]
-		},
-		{
-			"name": "Get All TODOs",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{base_url}}/todos",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"todos"
-					]
+					}
 				},
-				"description": "Get all TODO items without any filters."
-			},
-			"response": []
-		},
-		{
-			"name": "Get Completed TODOs",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{base_url}}/todos?completed=true",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"todos"
-					],
-					"query": [
-						{
-							"key": "completed",
-							"value": "true",
-							"description": "Filter by completion status"
-						}
-					]
-				},
-				"description": "Get only completed TODO items."
-			},
-			"response": []
-		},
-		{
-			"name": "Get Pending TODOs",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{base_url}}/todos?completed=false",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"todos"
-					],
-					"query": [
-						{
-							"key": "completed",
-							"value": "false",
-							"description": "Filter by completion status"
-						}
-					]
-				},
-				"description": "Get only pending (not completed) TODO items."
-			},
-			"response": []
-		},
-		{
-			"name": "Get TODO by ID",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{base_url}}/todos/{{todo_id}}",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"todos",
-						"{{todo_id}}"
-					]
-				},
-				"description": "Get a specific TODO by its ID. The todo_id variable is automatically set when creating a TODO."
-			},
-			"response": [
 				{
-					"name": "Success",
-					"originalRequest": {
+					"name": "Get All TODOs",
+					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/todos/1",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"todos",
-								"1"
-							]
+							"raw": "{{base_url}}/todos",
+							"host": ["{{base_url}}"],
+							"path": ["todos"]
 						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"cookie": [],
-					"body": "{\n  \"id\": 1,\n  \"title\": \"Learn Erlang\",\n  \"description\": \"Master functional programming and OTP\",\n  \"completed\": false,\n  \"created_at\": 1702234567,\n  \"updated_at\": 1702234567\n}"
+					}
 				},
 				{
-					"name": "Not Found",
-					"originalRequest": {
+					"name": "Get TODO by ID",
+					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/todos/999",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"todos",
-								"999"
-							]
+							"raw": "{{base_url}}/todos/{{todo_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}"]
 						}
-					},
-					"status": "Not Found",
-					"code": 404,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"cookie": [],
-					"body": "{\n  \"error\": \"Todo not found\"\n}"
-				}
-			]
-		},
-		{
-			"name": "Update TODO - Mark as Completed",
-			"request": {
-				"method": "PUT",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
 					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"completed\": true\n}"
 				},
-				"url": {
-					"raw": "{{base_url}}/todos/{{todo_id}}",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"todos",
-						"{{todo_id}}"
-					]
-				},
-				"description": "Mark a TODO as completed. All fields are optional."
-			},
-			"response": []
-		},
-		{
-			"name": "Update TODO - Change Title",
-			"request": {
-				"method": "PUT",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"title\": \"Learn Erlang and OTP\",\n  \"description\": \"Deep dive into functional programming\"\n}"
-				},
-				"url": {
-					"raw": "{{base_url}}/todos/{{todo_id}}",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"todos",
-						"{{todo_id}}"
-					]
-				},
-				"description": "Update title and description of a TODO."
-			},
-			"response": []
-		},
-		{
-			"name": "Update TODO - Complete Update",
-			"request": {
-				"method": "PUT",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"title\": \"Mastered Erlang\",\n  \"description\": \"Completed the entire journey\",\n  \"completed\": true\n}"
-				},
-				"url": {
-					"raw": "{{base_url}}/todos/{{todo_id}}",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"todos",
-						"{{todo_id}}"
-					]
-				},
-				"description": "Update all fields of a TODO at once."
-			},
-			"response": []
-		},
-		{
-			"name": "Delete TODO",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"url": {
-					"raw": "{{base_url}}/todos/{{todo_id}}",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"todos",
-						"{{todo_id}}"
-					]
-				},
-				"description": "Delete a TODO by its ID. Returns 204 No Content on success."
-			},
-			"response": [
 				{
-					"name": "Success",
-					"originalRequest": {
+					"name": "Update TODO",
+					"request": {
+						"method": "PUT",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Mastered Erlang OTP\",\n  \"completed\": true,\n  \"priority\": \"urgent\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Soft Delete TODO",
+					"request": {
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/todos/1",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"todos",
-								"1"
-							]
+							"raw": "{{base_url}}/todos/{{todo_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}"]
 						}
-					},
-					"status": "No Content",
-					"code": 204,
-					"_postman_previewlanguage": "json",
-					"header": [],
-					"cookie": [],
-					"body": ""
+					}
+				},
+				{
+					"name": "Permanent Delete TODO",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}?permanent=true",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}"],
+							"query": [{"key": "permanent", "value": "true"}]
+						}
+					}
 				}
 			]
 		},
 		{
-			"name": "CORS Preflight",
-			"request": {
-				"method": "OPTIONS",
-				"header": [],
-				"url": {
-					"raw": "{{base_url}}/todos",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"todos"
-					]
+			"name": "Advanced Features",
+			"item": [
+				{
+					"name": "Get Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stats"]
+						}
+					}
 				},
-				"description": "CORS preflight request. Check Access-Control headers in response."
-			},
-			"response": []
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
+				{
+					"name": "Get All Tags",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tags",
+							"host": ["{{base_url}}"],
+							"path": ["tags"]
+						}
+					}
+				},
+				{
+					"name": "Filter by Tags",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?tags=erlang,learning",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [{"key": "tags", "value": "erlang,learning"}]
+						}
+					}
+				},
+				{
+					"name": "Sort by Priority (desc)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?sort_by=priority&order=desc",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [
+								{"key": "sort_by", "value": "priority"},
+								{"key": "order", "value": "desc"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Sort by Due Date (asc)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?sort_by=due_date&order=asc",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [
+								{"key": "sort_by", "value": "due_date"},
+								{"key": "order", "value": "asc"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Restore Deleted TODO",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}/restore",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}", "restore"]
+						}
+					}
+				},
+				{
+					"name": "Bulk Complete",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ids\": [1, 2, 3, 4, 5]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/todos/bulk-complete",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "bulk-complete"]
+						}
+					}
+				},
+				{
+					"name": "Bulk Delete",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ids\": [10, 11, 12]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/todos/bulk-delete",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "bulk-delete"]
+						}
+					}
+				},
+				{
+					"name": "Get TODO History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}/history",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}", "history"]
+						}
+					}
+				},
+				{
+					"name": "Get All Audit History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/audit",
+							"host": ["{{base_url}}"],
+							"path": ["api", "audit"]
+						}
+					}
+				}
+			]
 		},
 		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
+			"name": "Filters & Pagination",
+			"item": [
+				{
+					"name": "Get Completed TODOs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?completed=true",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [{"key": "completed", "value": "true"}]
+						}
+					}
+				},
+				{
+					"name": "Get Pending TODOs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?completed=false",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [{"key": "completed", "value": "false"}]
+						}
+					}
+				},
+				{
+					"name": "Paginated TODOs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Search TODOs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?search=erlang",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [{"key": "search", "value": "erlang"}]
+						}
+					}
+				}
+			]
 		}
 	],
 	"variable": [
@@ -457,4 +320,3 @@
 		}
 	]
 }
-

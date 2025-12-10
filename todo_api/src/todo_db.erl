@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API exports
--export([start_link/0, create/1, read/1, read_all/0, read_all_paginated/2, read_by_status/1, read_by_tags/1, update/2, delete/1, delete_permanent/1, restore/1, bulk_complete/1, bulk_delete/1, count_all/0, get_statistics/0, get_all_tags/0]).
+-export([start_link/0, create/1, read/1, read_all/0, read_all_paginated/2, read_all_sorted/2, read_by_status/1, read_by_tags/1, update/2, delete/1, delete_permanent/1, restore/1, bulk_complete/1, bulk_delete/1, count_all/0, get_statistics/0, get_all_tags/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -13,6 +13,8 @@
     description :: binary(),
     completed = false :: boolean(),
     tags = [] :: list(binary()),
+    priority = <<"medium">> :: binary(), % low, medium, high, urgent
+    due_date = null :: integer() | null,
     deleted = false :: boolean(),
     created_at :: integer(),
     updated_at :: integer()
@@ -50,6 +52,12 @@ read_all() ->
 %% Output: {ok, [Todo]}
 read_all_paginated(Page, Limit) when is_integer(Page), is_integer(Limit), Page > 0, Limit > 0 ->
     gen_server:call(?SERVER, {read_all_paginated, Page, Limit}).
+
+%% @doc Read all todos with sorting
+%% Input: SortBy (binary), Order (binary)
+%% Output: {ok, [Todo]}
+read_all_sorted(SortBy, Order) ->
+    gen_server:call(?SERVER, {read_all_sorted, SortBy, Order}).
 
 %% @doc Count total number of todos
 %% Output: {ok, Count}
@@ -128,6 +136,8 @@ handle_call({create, TodoData}, _From, State) ->
     Title = maps:get(<<"title">>, TodoData, <<>>),
     Description = maps:get(<<"description">>, TodoData, <<>>),
     Tags = maps:get(<<"tags">>, TodoData, []),
+    Priority = maps:get(<<"priority">>, TodoData, <<"medium">>),
+    DueDate = maps:get(<<"due_date">>, TodoData, null),
     
     case Title of
         <<>> ->
@@ -141,6 +151,8 @@ handle_call({create, TodoData}, _From, State) ->
                 description = Description,
                 completed = false,
                 tags = Tags,
+                priority = Priority,
+                due_date = DueDate,
                 created_at = Timestamp,
                 updated_at = Timestamp
             },
@@ -151,7 +163,15 @@ handle_call({create, TodoData}, _From, State) ->
             
             case Result of
                 {atomic, ok} ->
-                    {reply, {ok, Id}, State};
+                    % Log audit event
+                    audit_log:log_event(Id, <<"created">>, #{
+                        <<"title">> => Title,
+                        <<"description">> => Description,
+                        <<"tags">> => Tags,
+                        <<"priority">> => Priority,
+                        <<"due_date">> => DueDate
+                    }, <<"system">>),
+                    {reply, {ok, todo_to_map(Todo)}, State};
                 {aborted, Reason} ->
                     {reply, {error, Reason}, State}
             end
@@ -243,12 +263,32 @@ handle_call(get_all_tags, _From, State) ->
 handle_call({read_all_paginated, Page, Limit}, _From, State) ->
     Result = mnesia:transaction(fun() ->
         AllTodos = mnesia:match_object(?TABLE, #todo{_ = '_'}, read),
+        % Filter out deleted
+        ActiveTodos = [T || T <- AllTodos, T#todo.deleted =:= false],
         % Sort by ID (could be by created_at or other field)
-        SortedTodos = lists:sort(fun(A, B) -> A#todo.id =< B#todo.id end, AllTodos),
+        SortedTodos = lists:sort(fun(A, B) -> A#todo.id =< B#todo.id end, ActiveTodos),
         % Calculate offset
         Offset = (Page - 1) * Limit,
         % Slice the list
         paginate_list(SortedTodos, Offset, Limit)
+    end),
+    
+    case Result of
+        {atomic, Todos} ->
+            TodoMaps = [todo_to_map(T) || T <- Todos],
+            {reply, {ok, TodoMaps}, State};
+        {aborted, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
+
+handle_call({read_all_sorted, SortBy, Order}, _From, State) ->
+    Result = mnesia:transaction(fun() ->
+        AllTodos = mnesia:match_object(?TABLE, #todo{_ = '_'}, read),
+        % Filter out deleted
+        ActiveTodos = [T || T <- AllTodos, T#todo.deleted =:= false],
+        % Sort by requested field
+        Sorted = sort_todos(ActiveTodos, SortBy, Order),
+        Sorted
     end),
     
     case Result of
@@ -324,14 +364,16 @@ handle_call({update, Id, UpdateData}, _From, State) ->
             [Todo] ->
                 UpdatedTodo = update_todo(Todo, UpdateData),
                 mnesia:write(?TABLE, UpdatedTodo, write),
-                {ok, UpdatedTodo};
+                {ok, Todo, UpdatedTodo};
             [] ->
                 {error, not_found}
         end
     end),
     
     case Result of
-        {atomic, {ok, UpdatedTodo}} ->
+        {atomic, {ok, OldTodo, UpdatedTodo}} ->
+            % Log audit event with changes
+            audit_log:log_event(Id, <<"updated">>, UpdateData, <<"system">>),
             {reply, {ok, todo_to_map(UpdatedTodo)}, State};
         {atomic, {error, Reason}} ->
             {reply, {error, Reason}, State};
@@ -377,6 +419,8 @@ handle_call({restore, Id}, _From, State) ->
     
     case Result of
         {atomic, {ok, RestoredTodo}} ->
+            % Log audit event
+            audit_log:log_event(Id, <<"restored">>, #{}, <<"system">>),
             {reply, {ok, todo_to_map(RestoredTodo)}, State};
         {atomic, {error, Reason}} ->
             {reply, {error, Reason}, State};
@@ -489,13 +533,18 @@ generate_id() ->
 
 %% @doc Convert todo record to map
 todo_to_map(#todo{id = Id, title = Title, description = Desc, 
-                  completed = Completed, tags = Tags, created_at = CreatedAt, updated_at = UpdatedAt}) ->
+                  completed = Completed, tags = Tags, priority = Priority,
+                  due_date = DueDate, deleted = Deleted,
+                  created_at = CreatedAt, updated_at = UpdatedAt}) ->
     #{
         <<"id">> => Id,
         <<"title">> => Title,
         <<"description">> => Desc,
         <<"completed">> => Completed,
         <<"tags">> => Tags,
+        <<"priority">> => Priority,
+        <<"due_date">> => DueDate,
+        <<"deleted">> => Deleted,
         <<"created_at">> => CreatedAt,
         <<"updated_at">> => UpdatedAt
     }.
@@ -506,6 +555,8 @@ update_todo(Todo, UpdateData) ->
     Description = maps:get(<<"description">>, UpdateData, Todo#todo.description),
     Completed = maps:get(<<"completed">>, UpdateData, Todo#todo.completed),
     Tags = maps:get(<<"tags">>, UpdateData, Todo#todo.tags),
+    Priority = maps:get(<<"priority">>, UpdateData, Todo#todo.priority),
+    DueDate = maps:get(<<"due_date">>, UpdateData, Todo#todo.due_date),
     UpdatedAt = erlang:system_time(second),
     
     Todo#todo{
@@ -513,6 +564,8 @@ update_todo(Todo, UpdateData) ->
         description = Description,
         completed = Completed,
         tags = Tags,
+        priority = Priority,
+        due_date = DueDate,
         updated_at = UpdatedAt
     }.
 
@@ -527,4 +580,33 @@ paginate_list(List, Offset, Limit) ->
                 false -> Sublist
             end
     end.
+
+%% @doc Sort todos by field and order
+sort_todos(Todos, SortBy, Order) ->
+    CompareFun = case {SortBy, Order} of
+        {<<"created_at">>, <<"asc">>} -> fun(A, B) -> A#todo.created_at =< B#todo.created_at end;
+        {<<"created_at">>, <<"desc">>} -> fun(A, B) -> A#todo.created_at >= B#todo.created_at end;
+        {<<"updated_at">>, <<"asc">>} -> fun(A, B) -> A#todo.updated_at =< B#todo.updated_at end;
+        {<<"updated_at">>, <<"desc">>} -> fun(A, B) -> A#todo.updated_at >= B#todo.updated_at end;
+        {<<"title">>, <<"asc">>} -> fun(A, B) -> A#todo.title =< B#todo.title end;
+        {<<"title">>, <<"desc">>} -> fun(A, B) -> A#todo.title >= B#todo.title end;
+        {<<"priority">>, <<"asc">>} -> fun(A, B) -> priority_value(A#todo.priority) =< priority_value(B#todo.priority) end;
+        {<<"priority">>, <<"desc">>} -> fun(A, B) -> priority_value(A#todo.priority) >= priority_value(B#todo.priority) end;
+        {<<"due_date">>, <<"asc">>} -> fun(A, B) -> due_date_value(A#todo.due_date) =< due_date_value(B#todo.due_date) end;
+        {<<"due_date">>, <<"desc">>} -> fun(A, B) -> due_date_value(A#todo.due_date) >= due_date_value(B#todo.due_date) end;
+        _ -> fun(A, B) -> A#todo.id =< B#todo.id end % Default
+    end,
+    lists:sort(CompareFun, Todos).
+
+%% @doc Convert priority to numeric value for sorting
+priority_value(<<"urgent">>) -> 4;
+priority_value(<<"high">>) -> 3;
+priority_value(<<"medium">>) -> 2;
+priority_value(<<"low">>) -> 1;
+priority_value(_) -> 0.
+
+%% @doc Convert due_date to sortable value (null becomes max value)
+due_date_value(null) -> 9999999999;
+due_date_value(DueDate) when is_integer(DueDate) -> DueDate;
+due_date_value(_) -> 9999999999.
 

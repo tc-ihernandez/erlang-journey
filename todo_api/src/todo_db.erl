@@ -137,7 +137,10 @@ handle_call({create, TodoData}, _From, State) ->
     Description = maps:get(<<"description">>, TodoData, <<>>),
     Tags = maps:get(<<"tags">>, TodoData, []),
     Priority = maps:get(<<"priority">>, TodoData, <<"medium">>),
-    DueDate = maps:get(<<"due_date">>, TodoData, null),
+    DueDateInput = maps:get(<<"due_date">>, TodoData, null),
+    
+    % Parse due_date (accepts both timestamp and DD/MM/YYYY format)
+    DueDate = parse_date_input(DueDateInput),
     
     case Title of
         <<>> ->
@@ -568,6 +571,32 @@ format_date(Timestamp) when is_integer(Timestamp) ->
                                     [Day, Month, Year, Hour, Minute, Second]));
 format_date(_) -> null.
 
+%% @doc Parse date input - accepts timestamp (integer) or DD/MM/YYYY string
+parse_date_input(null) -> null;
+parse_date_input(Timestamp) when is_integer(Timestamp) -> Timestamp;
+parse_date_input(DateString) when is_binary(DateString) ->
+    try
+        % Try to parse DD/MM/YYYY or DD/MM/YYYY HH:MM:SS
+        case binary:split(DateString, <<" ">>, [global]) of
+            [DatePart, TimePart] ->
+                % Has time part
+                [Day, Month, Year] = binary:split(DatePart, <<"/">>, [global]),
+                [Hour, Minute, Second] = binary:split(TimePart, <<":">>, [global]),
+                DateTime = {{binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)},
+                           {binary_to_integer(Hour), binary_to_integer(Minute), binary_to_integer(Second)}},
+                calendar:datetime_to_gregorian_seconds(DateTime) - 62167219200; % Unix epoch adjustment
+            [DatePart] ->
+                % Only date part, assume 00:00:00
+                [Day, Month, Year] = binary:split(DatePart, <<"/">>, [global]),
+                DateTime = {{binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)},
+                           {0, 0, 0}},
+                calendar:datetime_to_gregorian_seconds(DateTime) - 62167219200 % Unix epoch adjustment
+        end
+    catch
+        _:_ -> null % If parsing fails, return null
+    end;
+parse_date_input(_) -> null.
+
 %% @doc Update todo record with new data
 update_todo(Todo, UpdateData) ->
     Title = maps:get(<<"title">>, UpdateData, Todo#todo.title),
@@ -575,7 +604,14 @@ update_todo(Todo, UpdateData) ->
     Completed = maps:get(<<"completed">>, UpdateData, Todo#todo.completed),
     Tags = maps:get(<<"tags">>, UpdateData, Todo#todo.tags),
     Priority = maps:get(<<"priority">>, UpdateData, Todo#todo.priority),
-    DueDate = maps:get(<<"due_date">>, UpdateData, Todo#todo.due_date),
+    DueDateInput = maps:get(<<"due_date">>, UpdateData, Todo#todo.due_date),
+    
+    % Parse due_date if provided
+    DueDate = case maps:is_key(<<"due_date">>, UpdateData) of
+        true -> parse_date_input(DueDateInput);
+        false -> Todo#todo.due_date
+    end,
+    
     UpdatedAt = erlang:system_time(second),
     
     Todo#todo{

@@ -4,6 +4,9 @@ This folder contains comprehensive documentation for the TODO API project.
 
 ## Available Documentation
 
+### 📡 [API_REFERENCE.md](API_REFERENCE.md) ⭐ NEW
+Complete API reference with all endpoints, request/response examples, and error handling. Essential for API consumers.
+
 ### 📚 [QUICKSTART.md](QUICKSTART.md)
 Step-by-step guide to get the API up and running quickly. Perfect for first-time users.
 
@@ -26,6 +29,7 @@ Technical overview of the project architecture, design decisions, and learning o
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
+| API_REFERENCE | Complete API documentation | API consumers, frontend devs |
 | QUICKSTART | Get started in 5 minutes | New users |
 | TESTING_GUIDE | Comprehensive testing | Developers |
 | CHEATSHEET | Quick reference | All users |

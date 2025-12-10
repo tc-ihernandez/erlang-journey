@@ -15,6 +15,7 @@ A simple REST API for managing TODO items, built with Erlang using the Elli HTTP
 
 ## 📚 Documentation
 
+- **[API Reference](docs/API_REFERENCE.md)** ⭐ - Complete API documentation with all endpoints
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Get started in 5 minutes
 - **[Testing Guide](docs/TESTING_GUIDE.md)** - Comprehensive testing instructions
 - **[Cheat Sheet](docs/CHEATSHEET.md)** - Quick reference for common commands

@@ -158,20 +158,23 @@ handle_call({create, TodoData}, _From, State) ->
             },
             
             Result = mnesia:transaction(fun() ->
-                mnesia:write(?TABLE, Todo, write)
+                mnesia:write(?TABLE, Todo, write),
+                Todo
             end),
             
             case Result of
-                {atomic, ok} ->
-                    % Log audit event
-                    audit_log:log_event(Id, <<"created">>, #{
-                        <<"title">> => Title,
-                        <<"description">> => Description,
-                        <<"tags">> => Tags,
-                        <<"priority">> => Priority,
-                        <<"due_date">> => DueDate
-                    }, <<"system">>),
-                    {reply, {ok, todo_to_map(Todo)}, State};
+                {atomic, CreatedTodo} ->
+                    % Log audit event (async)
+                    spawn(fun() ->
+                        audit_log:log_event(Id, <<"created">>, #{
+                            <<"title">> => Title,
+                            <<"description">> => Description,
+                            <<"tags">> => Tags,
+                            <<"priority">> => Priority,
+                            <<"due_date">> => DueDate
+                        }, <<"system">>)
+                    end),
+                    {reply, {ok, todo_to_map(CreatedTodo)}, State};
                 {aborted, Reason} ->
                     {reply, {error, Reason}, State}
             end
@@ -371,9 +374,11 @@ handle_call({update, Id, UpdateData}, _From, State) ->
     end),
     
     case Result of
-        {atomic, {ok, OldTodo, UpdatedTodo}} ->
-            % Log audit event with changes
-            audit_log:log_event(Id, <<"updated">>, UpdateData, <<"system">>),
+        {atomic, {ok, _OldTodo, UpdatedTodo}} ->
+            % Log audit event (async)
+            spawn(fun() ->
+                audit_log:log_event(Id, <<"updated">>, UpdateData, <<"system">>)
+            end),
             {reply, {ok, todo_to_map(UpdatedTodo)}, State};
         {atomic, {error, Reason}} ->
             {reply, {error, Reason}, State};
@@ -419,8 +424,10 @@ handle_call({restore, Id}, _From, State) ->
     
     case Result of
         {atomic, {ok, RestoredTodo}} ->
-            % Log audit event
-            audit_log:log_event(Id, <<"restored">>, #{}, <<"system">>),
+            % Log audit event (async)
+            spawn(fun() ->
+                audit_log:log_event(Id, <<"restored">>, #{}, <<"system">>)
+            end),
             {reply, {ok, todo_to_map(RestoredTodo)}, State};
         {atomic, {error, Reason}} ->
             {reply, {error, Reason}, State};
@@ -543,11 +550,23 @@ todo_to_map(#todo{id = Id, title = Title, description = Desc,
         <<"completed">> => Completed,
         <<"tags">> => Tags,
         <<"priority">> => Priority,
-        <<"due_date">> => DueDate,
+        <<"due_date">> => format_date(DueDate),
+        <<"due_date_timestamp">> => DueDate,
         <<"deleted">> => Deleted,
-        <<"created_at">> => CreatedAt,
-        <<"updated_at">> => UpdatedAt
+        <<"created_at">> => format_date(CreatedAt),
+        <<"created_at_timestamp">> => CreatedAt,
+        <<"updated_at">> => format_date(UpdatedAt),
+        <<"updated_at_timestamp">> => UpdatedAt
     }.
+
+%% @doc Format timestamp to ISO8601 date string
+format_date(null) -> null;
+format_date(Timestamp) when is_integer(Timestamp) ->
+    DateTime = calendar:system_time_to_universal_time(Timestamp, second),
+    {{Year, Month, Day}, {Hour, Minute, Second}} = DateTime,
+    iolist_to_binary(io_lib:format("~4..0B-~2..0B-~2..0BT~2..0B:~2..0B:~2..0BZ", 
+                                    [Year, Month, Day, Hour, Minute, Second]));
+format_date(_) -> null.
 
 %% @doc Update todo record with new data
 update_todo(Todo, UpdateData) ->

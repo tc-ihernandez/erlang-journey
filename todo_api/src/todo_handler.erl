@@ -140,13 +140,8 @@ handle_request('POST', [<<"todos">>], Req) ->
             case validate_create(TodoData) of
                 ok ->
                     case todo_db:create(TodoData) of
-                        {ok, Id} ->
-                            case todo_db:read(Id) of
-                                {ok, Todo} ->
-                                    json_response(201, Todo);
-                                _ ->
-                                    json_response(500, #{<<"error">> => <<"Failed to retrieve created todo">>})
-                            end;
+                        {ok, Todo} ->
+                            json_response(201, Todo);
                         {error, Reason} ->
                             json_response(500, #{<<"error">> => format_error(Reason)})
                     end;

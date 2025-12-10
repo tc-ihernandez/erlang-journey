@@ -4,7 +4,10 @@ This folder contains comprehensive documentation for the TODO API project.
 
 ## Available Documentation
 
-### 📡 [API_REFERENCE.md](API_REFERENCE.md) ⭐ NEW
+### 🚀 [TOP_5_FEATURES.md](TOP_5_FEATURES.md) 🌟 NEW
+Showcase of the 5 most professional features: Rate Limiting, Statistics Dashboard, Tags System, Soft Delete + Restore, and Bulk Operations. Essential for understanding advanced capabilities!
+
+### 📡 [API_REFERENCE.md](API_REFERENCE.md) ⭐
 Complete API reference with all endpoints, request/response examples, and error handling. Essential for API consumers.
 
 ### 📚 [QUICKSTART.md](QUICKSTART.md)

@@ -40,6 +40,15 @@ init([]) ->
             type => worker,
             modules => [todo_db]
         },
+        % Rate limiter
+        #{
+            id => rate_limiter,
+            start => {rate_limiter, start_link, []},
+            restart => permanent,
+            shutdown => 5000,
+            type => worker,
+            modules => [rate_limiter]
+        },
         % HTTP server (Elli)
         #{
             id => elli_http,

@@ -4,6 +4,7 @@ A simple REST API for managing TODO items, built with Erlang using the Elli HTTP
 
 ## Features
 
+### Core Features
 - **RESTful API** with full CRUD operations
 - **Mnesia database** for persistent storage
 - **OTP principles** (Application, Supervisor, gen_server)
@@ -16,8 +17,18 @@ A simple REST API for managing TODO items, built with Erlang using the Elli HTTP
 - **Timestamps** with created_at and updated_at tracking
 - **Postman Collection** for easy API testing
 
+### 🚀 Professional Features (NEW!)
+- **⚡ Rate Limiting** - 100 requests/minute with X-RateLimit headers
+- **📊 Statistics Dashboard** - Comprehensive analytics endpoint
+- **🏷️ Tags System** - Organize TODOs with tags, filter by tags
+- **♻️ Soft Delete + Restore** - Never lose data accidentally
+- **⚙️ Bulk Operations** - Complete/delete multiple TODOs at once
+
+👉 **[See TOP 5 Features Documentation](docs/TOP_5_FEATURES.md)** for detailed examples and usage
+
 ## 📚 Documentation
 
+- **[TOP 5 Features](docs/TOP_5_FEATURES.md)** 🌟 - Professional features showcase
 - **[API Reference](docs/API_REFERENCE.md)** ⭐ - Complete API documentation with all endpoints
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Get started in 5 minutes
 - **[Testing Guide](docs/TESTING_GUIDE.md)** - Comprehensive testing instructions

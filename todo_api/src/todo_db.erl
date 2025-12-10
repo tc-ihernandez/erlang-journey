@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API exports
--export([start_link/0, create/1, read/1, read_all/0, read_all_paginated/2, read_by_status/1, update/2, delete/1, count_all/0]).
+-export([start_link/0, create/1, read/1, read_all/0, read_all_paginated/2, read_by_status/1, read_by_tags/1, update/2, delete/1, delete_permanent/1, restore/1, bulk_complete/1, bulk_delete/1, count_all/0, get_statistics/0, get_all_tags/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -12,6 +12,8 @@
     title :: binary(),
     description :: binary(),
     completed = false :: boolean(),
+    tags = [] :: list(binary()),
+    deleted = false :: boolean(),
     created_at :: integer(),
     updated_at :: integer()
 }).
@@ -54,11 +56,27 @@ read_all_paginated(Page, Limit) when is_integer(Page), is_integer(Limit), Page >
 count_all() ->
     gen_server:call(?SERVER, count_all).
 
+%% @doc Get statistics about todos
+%% Output: {ok, Statistics}
+get_statistics() ->
+    gen_server:call(?SERVER, get_statistics).
+
 %% @doc Read todos filtered by completion status
 %% Input: true | false
 %% Output: {ok, [Todo]}
 read_by_status(Completed) when is_boolean(Completed) ->
     gen_server:call(?SERVER, {read_by_status, Completed}).
+
+%% @doc Read todos filtered by tags (any of the provided tags)
+%% Input: [binary()]
+%% Output: {ok, [Todo]}
+read_by_tags(Tags) when is_list(Tags) ->
+    gen_server:call(?SERVER, {read_by_tags, Tags}).
+
+%% @doc Get all unique tags with usage count
+%% Output: {ok, [{Tag, Count}]}
+get_all_tags() ->
+    gen_server:call(?SERVER, get_all_tags).
 
 %% @doc Update a todo item
 %% Input: Id, #{title => binary(), description => binary(), completed => boolean()}
@@ -66,10 +84,32 @@ read_by_status(Completed) when is_boolean(Completed) ->
 update(Id, UpdateData) ->
     gen_server:call(?SERVER, {update, Id, UpdateData}).
 
-%% @doc Delete a todo item
+%% @doc Delete a todo item (soft delete)
 %% Output: ok | {error, not_found}
 delete(Id) ->
     gen_server:call(?SERVER, {delete, Id}).
+
+%% @doc Permanently delete a todo item
+%% Output: ok | {error, not_found}
+delete_permanent(Id) ->
+    gen_server:call(?SERVER, {delete_permanent, Id}).
+
+%% @doc Restore a soft-deleted todo item
+%% Output: {ok, Todo} | {error, not_found | not_deleted}
+restore(Id) ->
+    gen_server:call(?SERVER, {restore, Id}).
+
+%% @doc Bulk complete multiple todos
+%% Input: [Id]
+%% Output: {ok, SuccessCount} | {error, Reason}
+bulk_complete(Ids) when is_list(Ids) ->
+    gen_server:call(?SERVER, {bulk_complete, Ids}).
+
+%% @doc Bulk delete multiple todos (soft delete)
+%% Input: [Id]
+%% Output: {ok, SuccessCount} | {error, Reason}
+bulk_delete(Ids) when is_list(Ids) ->
+    gen_server:call(?SERVER, {bulk_delete, Ids}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -87,6 +127,7 @@ init([]) ->
 handle_call({create, TodoData}, _From, State) ->
     Title = maps:get(<<"title">>, TodoData, <<>>),
     Description = maps:get(<<"description">>, TodoData, <<>>),
+    Tags = maps:get(<<"tags">>, TodoData, []),
     
     case Title of
         <<>> ->
@@ -99,6 +140,7 @@ handle_call({create, TodoData}, _From, State) ->
                 title = Title,
                 description = Description,
                 completed = false,
+                tags = Tags,
                 created_at = Timestamp,
                 updated_at = Timestamp
             },
@@ -155,6 +197,49 @@ handle_call({read_by_status, Completed}, _From, State) ->
             {reply, {error, Reason}, State}
     end;
 
+handle_call({read_by_tags, Tags}, _From, State) ->
+    Result = mnesia:transaction(fun() ->
+        AllTodos = mnesia:match_object(?TABLE, #todo{_ = '_'}, read),
+        % Filter todos that have at least one of the requested tags
+        lists:filter(fun(Todo) ->
+            TodoTags = Todo#todo.tags,
+            lists:any(fun(Tag) -> lists:member(Tag, TodoTags) end, Tags)
+        end, AllTodos)
+    end),
+    
+    case Result of
+        {atomic, Todos} ->
+            TodoMaps = [todo_to_map(T) || T <- Todos],
+            {reply, {ok, TodoMaps}, State};
+        {aborted, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
+
+handle_call(get_all_tags, _From, State) ->
+    Result = mnesia:transaction(fun() ->
+        AllTodos = mnesia:match_object(?TABLE, #todo{_ = '_'}, read),
+        % Extract all tags and count occurrences
+        AllTags = lists:flatten([T#todo.tags || T <- AllTodos]),
+        % Count occurrences
+        TagCounts = lists:foldl(fun(Tag, Acc) ->
+            Count = maps:get(Tag, Acc, 0),
+            maps:put(Tag, Count + 1, Acc)
+        end, #{}, AllTags),
+        % Convert to list of maps
+        [#{<<"tag">> => Tag, <<"count">> => Count} || {Tag, Count} <- maps:to_list(TagCounts)]
+    end),
+    
+    case Result of
+        {atomic, Tags} ->
+            % Sort by count descending
+            SortedTags = lists:sort(fun(#{<<"count">> := C1}, #{<<"count">> := C2}) ->
+                C1 >= C2
+            end, Tags),
+            {reply, {ok, SortedTags}, State};
+        {aborted, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
+
 handle_call({read_all_paginated, Page, Limit}, _From, State) ->
     Result = mnesia:transaction(fun() ->
         AllTodos = mnesia:match_object(?TABLE, #todo{_ = '_'}, read),
@@ -182,6 +267,53 @@ handle_call(count_all, _From, State) ->
     case Result of
         {atomic, Count} ->
             {reply, {ok, Count}, State};
+        {aborted, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
+
+handle_call(get_statistics, _From, State) ->
+    Result = mnesia:transaction(fun() ->
+        AllTodos = mnesia:match_object(?TABLE, #todo{_ = '_'}, read),
+        Now = erlang:system_time(second),
+        TodayStart = Now - (Now rem 86400), % Start of today in UTC
+        
+        % Calculate statistics
+        Total = length(AllTodos),
+        Completed = length([T || T <- AllTodos, T#todo.completed =:= true]),
+        Pending = Total - Completed,
+        CompletionRate = case Total of
+            0 -> 0.0;
+            _ -> (Completed / Total) * 100
+        end,
+        
+        CreatedToday = length([T || T <- AllTodos, T#todo.created_at >= TodayStart]),
+        UpdatedToday = length([T || T <- AllTodos, T#todo.updated_at >= TodayStart]),
+        
+        % Find oldest and newest
+        {Oldest, Newest} = case AllTodos of
+            [] -> {null, null};
+            _ ->
+                Sorted = lists:sort(fun(A, B) -> A#todo.created_at =< B#todo.created_at end, AllTodos),
+                OldestTodo = hd(Sorted),
+                NewestTodo = lists:last(Sorted),
+                {OldestTodo#todo.created_at, NewestTodo#todo.created_at}
+        end,
+        
+        #{
+            <<"total">> => Total,
+            <<"completed">> => Completed,
+            <<"pending">> => Pending,
+            <<"completion_rate">> => round(CompletionRate * 10) / 10,
+            <<"created_today">> => CreatedToday,
+            <<"updated_today">> => UpdatedToday,
+            <<"oldest_todo">> => Oldest,
+            <<"newest_todo">> => Newest
+        }
+    end),
+    
+    case Result of
+        {atomic, Stats} ->
+            {reply, {ok, Stats}, State};
         {aborted, Reason} ->
             {reply, {error, Reason}, State}
     end;
@@ -223,6 +355,75 @@ handle_call({delete, Id}, _From, State) ->
             {reply, ok, State};
         {atomic, {error, Reason}} ->
             {reply, {error, Reason}, State};
+        {aborted, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
+
+handle_call({restore, Id}, _From, State) ->
+    % Restore a soft-deleted todo
+    Result = mnesia:transaction(fun() ->
+        case mnesia:read(?TABLE, Id) of
+            [Todo] when Todo#todo.deleted =:= true ->
+                UpdatedAt = erlang:system_time(second),
+                RestoredTodo = Todo#todo{deleted = false, updated_at = UpdatedAt},
+                mnesia:write(?TABLE, RestoredTodo, write),
+                {ok, RestoredTodo};
+            [_Todo] ->
+                {error, not_deleted};
+            [] ->
+                {error, not_found}
+        end
+    end),
+    
+    case Result of
+        {atomic, {ok, RestoredTodo}} ->
+            {reply, {ok, todo_to_map(RestoredTodo)}, State};
+        {atomic, {error, Reason}} ->
+            {reply, {error, Reason}, State};
+        {aborted, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
+
+handle_call({bulk_complete, Ids}, _From, State) ->
+    Result = mnesia:transaction(fun() ->
+        UpdatedAt = erlang:system_time(second),
+        lists:foldl(fun(Id, SuccessCount) ->
+            case mnesia:read(?TABLE, Id) of
+                [Todo] when Todo#todo.deleted =:= false ->
+                    UpdatedTodo = Todo#todo{completed = true, updated_at = UpdatedAt},
+                    mnesia:write(?TABLE, UpdatedTodo, write),
+                    SuccessCount + 1;
+                _ ->
+                    SuccessCount
+            end
+        end, 0, Ids)
+    end),
+    
+    case Result of
+        {atomic, SuccessCount} ->
+            {reply, {ok, SuccessCount}, State};
+        {aborted, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
+
+handle_call({bulk_delete, Ids}, _From, State) ->
+    Result = mnesia:transaction(fun() ->
+        UpdatedAt = erlang:system_time(second),
+        lists:foldl(fun(Id, SuccessCount) ->
+            case mnesia:read(?TABLE, Id) of
+                [Todo] when Todo#todo.deleted =:= false ->
+                    DeletedTodo = Todo#todo{deleted = true, updated_at = UpdatedAt},
+                    mnesia:write(?TABLE, DeletedTodo, write),
+                    SuccessCount + 1;
+                _ ->
+                    SuccessCount
+            end
+        end, 0, Ids)
+    end),
+    
+    case Result of
+        {atomic, SuccessCount} ->
+            {reply, {ok, SuccessCount}, State};
         {aborted, Reason} ->
             {reply, {error, Reason}, State}
     end;
@@ -288,12 +489,13 @@ generate_id() ->
 
 %% @doc Convert todo record to map
 todo_to_map(#todo{id = Id, title = Title, description = Desc, 
-                  completed = Completed, created_at = CreatedAt, updated_at = UpdatedAt}) ->
+                  completed = Completed, tags = Tags, created_at = CreatedAt, updated_at = UpdatedAt}) ->
     #{
         <<"id">> => Id,
         <<"title">> => Title,
         <<"description">> => Desc,
         <<"completed">> => Completed,
+        <<"tags">> => Tags,
         <<"created_at">> => CreatedAt,
         <<"updated_at">> => UpdatedAt
     }.
@@ -303,12 +505,14 @@ update_todo(Todo, UpdateData) ->
     Title = maps:get(<<"title">>, UpdateData, Todo#todo.title),
     Description = maps:get(<<"description">>, UpdateData, Todo#todo.description),
     Completed = maps:get(<<"completed">>, UpdateData, Todo#todo.completed),
+    Tags = maps:get(<<"tags">>, UpdateData, Todo#todo.tags),
     UpdatedAt = erlang:system_time(second),
     
     Todo#todo{
         title = Title,
         description = Description,
         completed = Completed,
+        tags = Tags,
         updated_at = UpdatedAt
     }.
 

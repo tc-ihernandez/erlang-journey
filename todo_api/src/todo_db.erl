@@ -559,13 +559,13 @@ todo_to_map(#todo{id = Id, title = Title, description = Desc,
         <<"updated_at_timestamp">> => UpdatedAt
     }.
 
-%% @doc Format timestamp to ISO8601 date string
+%% @doc Format timestamp to DD/MM/YYYY HH:MM:SS
 format_date(null) -> null;
 format_date(Timestamp) when is_integer(Timestamp) ->
     DateTime = calendar:system_time_to_universal_time(Timestamp, second),
     {{Year, Month, Day}, {Hour, Minute, Second}} = DateTime,
-    iolist_to_binary(io_lib:format("~4..0B-~2..0B-~2..0BT~2..0B:~2..0B:~2..0BZ", 
-                                    [Year, Month, Day, Hour, Minute, Second]));
+    iolist_to_binary(io_lib:format("~2..0B/~2..0B/~4..0B ~2..0B:~2..0B:~2..0B", 
+                                    [Day, Month, Year, Hour, Minute, Second]));
 format_date(_) -> null.
 
 %% @doc Update todo record with new data

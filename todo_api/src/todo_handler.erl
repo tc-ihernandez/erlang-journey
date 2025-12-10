@@ -20,13 +20,37 @@ handle_event(_Event, _Data, _Args) ->
 %%% Request Routing
 %%%===================================================================
 
-%% List all todos: GET /todos
-handle_request('GET', [<<"todos">>], _Req) ->
-    case todo_db:read_all() of
-        {ok, Todos} ->
-            json_response(200, #{<<"todos">> => Todos});
-        {error, Reason} ->
-            json_response(500, #{<<"error">> => format_error(Reason)})
+%% List all todos: GET /todos or GET /todos?completed=true/false
+handle_request('GET', [<<"todos">>], Req) ->
+    % Check for completed query parameter
+    case elli_request:get_arg(<<"completed">>, Req, undefined) of
+        undefined ->
+            % No filter, return all
+            case todo_db:read_all() of
+                {ok, Todos} ->
+                    json_response(200, #{<<"todos">> => Todos});
+                {error, Reason} ->
+                    json_response(500, #{<<"error">> => format_error(Reason)})
+            end;
+        <<"true">> ->
+            % Filter by completed = true
+            case todo_db:read_by_status(true) of
+                {ok, Todos} ->
+                    json_response(200, #{<<"todos">> => Todos});
+                {error, Reason} ->
+                    json_response(500, #{<<"error">> => format_error(Reason)})
+            end;
+        <<"false">> ->
+            % Filter by completed = false
+            case todo_db:read_by_status(false) of
+                {ok, Todos} ->
+                    json_response(200, #{<<"todos">> => Todos});
+                {error, Reason} ->
+                    json_response(500, #{<<"error">> => format_error(Reason)})
+            end;
+        _ ->
+            % Invalid value for completed parameter
+            json_response(400, #{<<"error">> => <<"Invalid 'completed' parameter. Use 'true' or 'false'">>})
     end;
 
 %% Get specific todo: GET /todos/:id
@@ -115,6 +139,10 @@ handle_request('DELETE', [<<"todos">>, IdBin], _Req) ->
 handle_request('GET', [<<"health">>], _Req) ->
     json_response(200, #{<<"status">> => <<"ok">>});
 
+%% CORS preflight: OPTIONS
+handle_request('OPTIONS', _Path, _Req) ->
+    json_response(200, #{<<"message">> => <<"CORS preflight">>});
+
 %% Not found for all other routes
 handle_request(_Method, _Path, _Req) ->
     json_response(404, #{<<"error">> => <<"Route not found">>}).
@@ -153,12 +181,19 @@ format_error(Reason) when is_binary(Reason) ->
 format_error(Reason) ->
     iolist_to_binary(io_lib:format("~p", [Reason])).
 
-%% @doc Create JSON response
+%% @doc Create JSON response with CORS headers
 json_response(StatusCode, Data) ->
     Body = case StatusCode of
         204 -> <<>>;  % No content for 204
         _ -> jsone:encode(Data)
     end,
     
-    {StatusCode, [{<<"Content-Type">>, <<"application/json">>}], Body}.
+    Headers = [
+        {<<"Content-Type">>, <<"application/json">>},
+        {<<"Access-Control-Allow-Origin">>, <<"*">>},
+        {<<"Access-Control-Allow-Methods">>, <<"GET, POST, PUT, DELETE, OPTIONS">>},
+        {<<"Access-Control-Allow-Headers">>, <<"Content-Type">>}
+    ],
+    
+    {StatusCode, Headers, Body}.
 

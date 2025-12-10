@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API exports
--export([start_link/0, create/1, read/1, read_all/0, update/2, delete/1]).
+-export([start_link/0, create/1, read/1, read_all/0, read_by_status/1, update/2, delete/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -12,7 +12,8 @@
     title :: binary(),
     description :: binary(),
     completed = false :: boolean(),
-    created_at :: integer()
+    created_at :: integer(),
+    updated_at :: integer()
 }).
 
 -define(SERVER, ?MODULE).
@@ -41,6 +42,12 @@ read(Id) ->
 %% Output: {ok, [Todo]}
 read_all() ->
     gen_server:call(?SERVER, read_all).
+
+%% @doc Read todos filtered by completion status
+%% Input: true | false
+%% Output: {ok, [Todo]}
+read_by_status(Completed) when is_boolean(Completed) ->
+    gen_server:call(?SERVER, {read_by_status, Completed}).
 
 %% @doc Update a todo item
 %% Input: Id, #{title => binary(), description => binary(), completed => boolean()}
@@ -75,13 +82,14 @@ handle_call({create, TodoData}, _From, State) ->
             {reply, {error, title_required}, State};
         _ ->
             Id = generate_id(),
-            CreatedAt = erlang:system_time(second),
+            Timestamp = erlang:system_time(second),
             Todo = #todo{
                 id = Id,
                 title = Title,
                 description = Description,
                 completed = false,
-                created_at = CreatedAt
+                created_at = Timestamp,
+                updated_at = Timestamp
             },
             
             Result = mnesia:transaction(fun() ->
@@ -113,6 +121,19 @@ handle_call({read, Id}, _From, State) ->
 handle_call(read_all, _From, State) ->
     Result = mnesia:transaction(fun() ->
         mnesia:match_object(?TABLE, #todo{_ = '_'}, read)
+    end),
+    
+    case Result of
+        {atomic, Todos} ->
+            TodoMaps = [todo_to_map(T) || T <- Todos],
+            {reply, {ok, TodoMaps}, State};
+        {aborted, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
+
+handle_call({read_by_status, Completed}, _From, State) ->
+    Result = mnesia:transaction(fun() ->
+        mnesia:match_object(?TABLE, #todo{completed = Completed, _ = '_'}, read)
     end),
     
     case Result of
@@ -225,13 +246,14 @@ generate_id() ->
 
 %% @doc Convert todo record to map
 todo_to_map(#todo{id = Id, title = Title, description = Desc, 
-                  completed = Completed, created_at = CreatedAt}) ->
+                  completed = Completed, created_at = CreatedAt, updated_at = UpdatedAt}) ->
     #{
         <<"id">> => Id,
         <<"title">> => Title,
         <<"description">> => Desc,
         <<"completed">> => Completed,
-        <<"created_at">> => CreatedAt
+        <<"created_at">> => CreatedAt,
+        <<"updated_at">> => UpdatedAt
     }.
 
 %% @doc Update todo record with new data
@@ -239,10 +261,12 @@ update_todo(Todo, UpdateData) ->
     Title = maps:get(<<"title">>, UpdateData, Todo#todo.title),
     Description = maps:get(<<"description">>, UpdateData, Todo#todo.description),
     Completed = maps:get(<<"completed">>, UpdateData, Todo#todo.completed),
+    UpdatedAt = erlang:system_time(second),
     
     Todo#todo{
         title = Title,
         description = Description,
-        completed = Completed
+        completed = Completed,
+        updated_at = UpdatedAt
     }.
 

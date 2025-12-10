@@ -9,6 +9,9 @@ A simple REST API for managing TODO items, built with Erlang using the Elli HTTP
 - **OTP principles** (Application, Supervisor, gen_server)
 - **JSON** request/response handling
 - **Error handling** with appropriate HTTP status codes
+- **CORS support** for frontend integration
+- **Filtering** by completion status
+- **Timestamps** with created_at and updated_at tracking
 
 ## 📚 Documentation
 
@@ -88,16 +91,27 @@ curl -X POST http://localhost:8000/todos \
   "title": "Learn Erlang",
   "description": "Complete the Erlang journey",
   "completed": false,
-  "created_at": 1702234567
+  "created_at": 1702234567,
+  "updated_at": 1702234567
 }
 ```
 
 ### Get All TODOs
 
-List all TODO items:
+List all TODO items, optionally filtered by completion status:
 
+**Get all TODOs:**
 ```bash
 curl http://localhost:8000/todos
+```
+
+**Filter by completed:**
+```bash
+# Get only completed tasks
+curl "http://localhost:8000/todos?completed=true"
+
+# Get only pending tasks
+curl "http://localhost:8000/todos?completed=false"
 ```
 
 **Response (200 OK):**
@@ -109,7 +123,8 @@ curl http://localhost:8000/todos
       "title": "Learn Erlang",
       "description": "Complete the Erlang journey",
       "completed": false,
-      "created_at": 1702234567
+      "created_at": 1702234567,
+      "updated_at": 1702234567
     }
   ]
 }
@@ -130,7 +145,8 @@ curl http://localhost:8000/todos/1
   "title": "Learn Erlang",
   "description": "Complete the Erlang journey",
   "completed": false,
-  "created_at": 1702234567
+  "created_at": 1702234567,
+  "updated_at": 1702234567
 }
 ```
 
@@ -165,9 +181,12 @@ You can update any combination of fields:
   "title": "Learn Erlang",
   "description": "Complete the Erlang journey",
   "completed": true,
-  "created_at": 1702234567
+  "created_at": 1702234567,
+  "updated_at": 1702234668
 }
 ```
+
+Note: `updated_at` reflects when the TODO was last modified.
 
 ### Delete a TODO
 
@@ -229,7 +248,8 @@ Each TODO has the following fields:
 - `title` - String (required)
 - `description` - String (optional)
 - `completed` - Boolean (default: false)
-- `created_at` - Unix timestamp (auto-generated)
+- `created_at` - Unix timestamp (auto-generated on creation)
+- `updated_at` - Unix timestamp (auto-updated on modification)
 
 ## Error Handling
 

@@ -20,37 +20,71 @@ handle_event(_Event, _Data, _Args) ->
 %%% Request Routing
 %%%===================================================================
 
-%% List all todos: GET /todos or GET /todos?completed=true/false
+%% List all todos: GET /todos with optional query parameters
+%% Supports: ?completed=true/false, ?page=1, ?limit=10, ?search=keyword
 handle_request('GET', [<<"todos">>], Req) ->
-    % Check for completed query parameter
-    case elli_request:get_arg(<<"completed">>, Req, undefined) of
-        undefined ->
-            % No filter, return all
-            case todo_db:read_all() of
-                {ok, Todos} ->
-                    json_response(200, #{<<"todos">> => Todos});
-                {error, Reason} ->
-                    json_response(500, #{<<"error">> => format_error(Reason)})
-            end;
-        <<"true">> ->
-            % Filter by completed = true
-            case todo_db:read_by_status(true) of
-                {ok, Todos} ->
-                    json_response(200, #{<<"todos">> => Todos});
-                {error, Reason} ->
-                    json_response(500, #{<<"error">> => format_error(Reason)})
-            end;
-        <<"false">> ->
-            % Filter by completed = false
-            case todo_db:read_by_status(false) of
-                {ok, Todos} ->
-                    json_response(200, #{<<"todos">> => Todos});
-                {error, Reason} ->
-                    json_response(500, #{<<"error">> => format_error(Reason)})
-            end;
-        _ ->
-            % Invalid value for completed parameter
-            json_response(400, #{<<"error">> => <<"Invalid 'completed' parameter. Use 'true' or 'false'">>})
+    CompletedFilter = elli_request:get_arg(<<"completed">>, Req, undefined),
+    PageParam = elli_request:get_arg(<<"page">>, Req, undefined),
+    LimitParam = elli_request:get_arg(<<"limit">>, Req, undefined),
+    SearchParam = elli_request:get_arg(<<"search">>, Req, undefined),
+    
+    % Parse pagination parameters
+    {UsePagination, Page, Limit} = case {PageParam, LimitParam} of
+        {undefined, undefined} -> {false, 1, 10};
+        {P, L} when P /= undefined; L /= undefined ->
+            ParsedPage = parse_int(P, 1),
+            ParsedLimit = parse_int(L, 10),
+            {true, ParsedPage, ParsedLimit};
+        _ -> {false, 1, 10}
+    end,
+    
+    % Get todos based on filters and pagination
+    Result = case {CompletedFilter, SearchParam, UsePagination} of
+        {undefined, undefined, false} ->
+            % No filters, no pagination
+            todo_db:read_all();
+        {undefined, undefined, true} ->
+            % Only pagination
+            todo_db:read_all_paginated(Page, Limit);
+        {<<"true">>, undefined, _} ->
+            % Filter by completed
+            todo_db:read_by_status(true);
+        {<<"false">>, undefined, _} ->
+            % Filter by pending
+            todo_db:read_by_status(false);
+        {undefined, Search, _} when Search /= undefined ->
+            % Search (will implement next)
+            {ok, search_todos(Search)};
+        {_, _, _} ->
+            % Invalid combination or completed with invalid value
+            case CompletedFilter of
+                undefined -> todo_db:read_all();
+                <<"true">> -> todo_db:read_by_status(true);
+                <<"false">> -> todo_db:read_by_status(false);
+                _ -> {error, invalid_completed}
+            end
+    end,
+    
+    % Build response
+    case Result of
+        {ok, Todos} when UsePagination ->
+            {ok, TotalCount} = todo_db:count_all(),
+            TotalPages = ceil(TotalCount / Limit),
+            json_response(200, #{
+                <<"todos">> => Todos,
+                <<"pagination">> => #{
+                    <<"page">> => Page,
+                    <<"limit">> => Limit,
+                    <<"total">> => TotalCount,
+                    <<"total_pages">> => TotalPages
+                }
+            });
+        {ok, Todos} ->
+            json_response(200, #{<<"todos">> => Todos});
+        {error, invalid_completed} ->
+            json_response(400, #{<<"error">> => <<"Invalid 'completed' parameter. Use 'true' or 'false'">>});
+        {error, Reason} ->
+            json_response(500, #{<<"error">> => format_error(Reason)})
     end;
 
 %% Get specific todo: GET /todos/:id
@@ -180,6 +214,29 @@ format_error(Reason) when is_binary(Reason) ->
     Reason;
 format_error(Reason) ->
     iolist_to_binary(io_lib:format("~p", [Reason])).
+
+%% @doc Parse integer from binary, return default if invalid
+parse_int(undefined, Default) ->
+    Default;
+parse_int(Binary, Default) when is_binary(Binary) ->
+    try
+        binary_to_integer(Binary)
+    catch
+        _:_ -> Default
+    end;
+parse_int(_, Default) ->
+    Default.
+
+%% @doc Search todos by keyword in title or description
+search_todos(Keyword) ->
+    {ok, AllTodos} = todo_db:read_all(),
+    LowerKeyword = string:lowercase(Keyword),
+    lists:filter(fun(Todo) ->
+        Title = string:lowercase(maps:get(<<"title">>, Todo, <<>>)),
+        Description = string:lowercase(maps:get(<<"description">>, Todo, <<>>)),
+        string:find(Title, LowerKeyword) =/= nomatch orelse
+        string:find(Description, LowerKeyword) =/= nomatch
+    end, AllTodos).
 
 %% @doc Create JSON response with CORS headers
 json_response(StatusCode, Data) ->

@@ -134,14 +134,15 @@ curl -X POST http://localhost:8000/todos \
 
 ## Get All TODOs
 
-Retrieve all TODOs, optionally filtered by completion status.
+Retrieve all TODOs with support for filtering, pagination, and search.
 
 ### Request
 
 ```http
 GET /todos
 GET /todos?completed=true
-GET /todos?completed=false
+GET /todos?page=1&limit=10
+GET /todos?search=erlang
 ```
 
 **Query Parameters:**
@@ -149,6 +150,9 @@ GET /todos?completed=false
   - `true` - Get only completed TODOs
   - `false` - Get only pending TODOs
   - Omit parameter - Get all TODOs
+- `page` (optional): Page number for pagination (starts at 1)
+- `limit` (optional): Number of items per page (default: 10)
+- `search` (optional): Search keyword in title and description (case-insensitive)
 
 ### Response
 
@@ -222,6 +226,62 @@ curl "http://localhost:8000/todos?completed=false"
       "completed": false,
       "created_at": 1702234567,
       "updated_at": 1702234567
+    }
+  ]
+}
+```
+
+**Paginated request:**
+```bash
+curl "http://localhost:8000/todos?page=1&limit=10"
+```
+
+**Response (with pagination):**
+```json
+{
+  "todos": [
+    {
+      "id": 1,
+      "title": "Learn Erlang",
+      "description": "Master functional programming",
+      "completed": false,
+      "created_at": 1702234567,
+      "updated_at": 1702234567
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "total_pages": 3
+  }
+}
+```
+
+**Search request:**
+```bash
+curl "http://localhost:8000/todos?search=erlang"
+```
+
+**Response (search results):**
+```json
+{
+  "todos": [
+    {
+      "id": 1,
+      "title": "Learn Erlang",
+      "description": "Master functional programming",
+      "completed": false,
+      "created_at": 1702234567,
+      "updated_at": 1702234567
+    },
+    {
+      "id": 5,
+      "title": "Read Erlang book",
+      "description": "Learn You Some Erlang",
+      "completed": true,
+      "created_at": 1702234800,
+      "updated_at": 1702234900
     }
   ]
 }

@@ -11,7 +11,10 @@ A simple REST API for managing TODO items, built with Erlang using the Elli HTTP
 - **Error handling** with appropriate HTTP status codes
 - **CORS support** for frontend integration
 - **Filtering** by completion status
+- **Pagination** support with page and limit parameters
+- **Search** functionality in title and description
 - **Timestamps** with created_at and updated_at tracking
+- **Postman Collection** for easy API testing
 
 ## 📚 Documentation
 
@@ -54,6 +57,18 @@ rebar3 shell
 The API will start on `http://localhost:8000`
 
 To stop the application, press `Ctrl+C` twice or type `q().` in the Erlang shell.
+
+## Testing with Postman
+
+Import the Postman collection for easy API testing:
+
+1. Open Postman
+2. Click **Import**
+3. Select the file: `TODO_API.postman_collection.json`
+4. The collection includes all endpoints with example requests
+5. Environment variable `base_url` is pre-configured to `http://localhost:8000`
+
+The collection includes automatic tests and will save the `todo_id` variable when creating a TODO.
 
 ## API Endpoints
 
@@ -106,13 +121,19 @@ List all TODO items, optionally filtered by completion status:
 curl http://localhost:8000/todos
 ```
 
-**Filter by completed:**
+**Filter, paginate, and search:**
 ```bash
 # Get only completed tasks
 curl "http://localhost:8000/todos?completed=true"
 
 # Get only pending tasks
 curl "http://localhost:8000/todos?completed=false"
+
+# Get paginated results (page 1, 10 items per page)
+curl "http://localhost:8000/todos?page=1&limit=10"
+
+# Search for tasks containing "erlang"
+curl "http://localhost:8000/todos?search=erlang"
 ```
 
 **Response (200 OK):**
@@ -330,20 +351,6 @@ c(todo_handler).
 
 - **Elli** (3.3.0) - Fast and lightweight HTTP server
 - **jsone** (1.8.1) - JSON encoding/decoding library
-
-## Technical Highlights
-
-This project demonstrates:
-
-- ✓ OTP Application structure
-- ✓ Supervisor design pattern
-- ✓ gen_server behavior
-- ✓ Mnesia database operations
-- ✓ HTTP request handling with Elli
-- ✓ JSON serialization/deserialization
-- ✓ Pattern matching and guards
-- ✓ Error handling
-- ✓ RESTful API design
 
 ## License
 

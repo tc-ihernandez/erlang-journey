@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API exports
--export([start_link/0, create/1, read/1, read_all/0, read_by_status/1, update/2, delete/1]).
+-export([start_link/0, create/1, read/1, read_all/0, read_all_paginated/2, read_by_status/1, update/2, delete/1, count_all/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -42,6 +42,17 @@ read(Id) ->
 %% Output: {ok, [Todo]}
 read_all() ->
     gen_server:call(?SERVER, read_all).
+
+%% @doc Read all todos with pagination
+%% Input: Page (starting from 1), Limit (items per page)
+%% Output: {ok, [Todo]}
+read_all_paginated(Page, Limit) when is_integer(Page), is_integer(Limit), Page > 0, Limit > 0 ->
+    gen_server:call(?SERVER, {read_all_paginated, Page, Limit}).
+
+%% @doc Count total number of todos
+%% Output: {ok, Count}
+count_all() ->
+    gen_server:call(?SERVER, count_all).
 
 %% @doc Read todos filtered by completion status
 %% Input: true | false
@@ -140,6 +151,37 @@ handle_call({read_by_status, Completed}, _From, State) ->
         {atomic, Todos} ->
             TodoMaps = [todo_to_map(T) || T <- Todos],
             {reply, {ok, TodoMaps}, State};
+        {aborted, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
+
+handle_call({read_all_paginated, Page, Limit}, _From, State) ->
+    Result = mnesia:transaction(fun() ->
+        AllTodos = mnesia:match_object(?TABLE, #todo{_ = '_'}, read),
+        % Sort by ID (could be by created_at or other field)
+        SortedTodos = lists:sort(fun(A, B) -> A#todo.id =< B#todo.id end, AllTodos),
+        % Calculate offset
+        Offset = (Page - 1) * Limit,
+        % Slice the list
+        paginate_list(SortedTodos, Offset, Limit)
+    end),
+    
+    case Result of
+        {atomic, Todos} ->
+            TodoMaps = [todo_to_map(T) || T <- Todos],
+            {reply, {ok, TodoMaps}, State};
+        {aborted, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
+
+handle_call(count_all, _From, State) ->
+    Result = mnesia:transaction(fun() ->
+        mnesia:table_info(?TABLE, size)
+    end),
+    
+    case Result of
+        {atomic, Count} ->
+            {reply, {ok, Count}, State};
         {aborted, Reason} ->
             {reply, {error, Reason}, State}
     end;
@@ -269,4 +311,16 @@ update_todo(Todo, UpdateData) ->
         completed = Completed,
         updated_at = UpdatedAt
     }.
+
+%% @doc Paginate a list
+paginate_list(List, Offset, Limit) ->
+    case Offset >= length(List) of
+        true -> [];
+        false ->
+            Sublist = lists:nthtail(Offset, List),
+            case length(Sublist) > Limit of
+                true -> lists:sublist(Sublist, Limit);
+                false -> Sublist
+            end
+    end.
 

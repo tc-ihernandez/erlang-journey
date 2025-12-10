@@ -10,6 +10,13 @@ A simple REST API for managing TODO items, built with Erlang using the Elli HTTP
 - **JSON** request/response handling
 - **Error handling** with appropriate HTTP status codes
 
+## 📚 Documentation
+
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Get started in 5 minutes
+- **[Testing Guide](docs/TESTING_GUIDE.md)** - Comprehensive testing instructions
+- **[Cheat Sheet](docs/CHEATSHEET.md)** - Quick reference for common commands
+- **[Project Summary](docs/PROJECT_SUMMARY.md)** - Technical overview and architecture
+
 ## Prerequisites
 
 - Erlang/OTP 24 or higher

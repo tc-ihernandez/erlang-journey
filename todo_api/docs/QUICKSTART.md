@@ -105,7 +105,13 @@ curl http://localhost:8000/todos | jq
 
 ## Testing Script
 
-Save this as `test_api.sh` and run it:
+The test script is available at `scripts/test_api.sh`. You can run it with:
+
+```bash
+./scripts/test_api.sh
+```
+
+Or create your own test script:
 
 ```bash
 #!/bin/bash
@@ -158,8 +164,8 @@ echo "=== Tests Complete ==="
 
 Make it executable and run:
 ```bash
-chmod +x test_api.sh
-./test_api.sh
+chmod +x scripts/test_api.sh
+./scripts/test_api.sh
 ```
 
 ## Troubleshooting

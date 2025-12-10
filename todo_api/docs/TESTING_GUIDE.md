@@ -41,7 +41,7 @@ Starting TODO API...
 ```bash
 # Open a new terminal and run:
 cd /Users/ivettehernandez/Documents/GitHub/erlang-journey/todo_api
-./test_api.sh
+./scripts/test_api.sh
 ```
 
 This script runs 12 automated tests and shows results with ✓ or ✗.

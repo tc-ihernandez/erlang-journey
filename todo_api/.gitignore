@@ -1,0 +1,32 @@
+# Erlang artifacts
+*.beam
+*.dump
+erl_crash.dump
+
+# rebar3 artifacts
+.rebar3/
+_build/
+_checkouts/
+
+# Erlang release artifacts
+rel/
+
+# Mnesia database files
+Mnesia.*
+mnesia/
+*.DAT
+*.DCD
+*.DCL
+*.LOG
+
+# Editor files
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+

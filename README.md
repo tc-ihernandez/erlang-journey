@@ -2,6 +2,23 @@
 
 Just a JS dev trying to survive Erlang 😅
 
+## 🤔 JavaScript vs Erlang: My Experience
+Honestly? Picking up Erlang after years of JavaScript has been one of those unexpected but very welcome perspective shifts in my career.
+
+The first big change was pattern matching. Instead of navigating endless if/else branches, you just describe the shape of the data and let the language route the logic. It keeps your code focused, declarative, and way easier to reason about — something I didn’t realize I’d been missing until I used it.
+
+Immutability across the board also surprised me. At first it felt limiting, but it quickly became a feature I appreciated. It forces cleaner thinking, eliminates entire categories of side-effect bugs, and makes debugging feel like less of a detective novel and more of a checklist.
+
+And then there’s the classic “let it crash” mindset. Coming from JS, where you tend to bubble-wrap everything in try/catch, Erlang’s supervision model felt almost rebellious. But once you see the resilience you get out of it, it clicks — the system becomes self-healing instead of you micromanaging every failure.
+
+Recursion as the primary iteration tool definitely pushed me out of my comfort zone. Tail-call optimization almost felt like a cheat code once I wrapped my head around it.
+
+But concurrency is where Erlang really shines. After working with it, you understand why Erlang systems run telecom infrastructure and still feel timeless.
+
+Overall, learning Erlang expanded the way I think about design, reliability, and distributed systems. It’s one of those languages that doesn’t just add a tool to your stack — it shifts your mental model. And honestly, that’s been the best part.
+
+---
+
 ## 📋 TODO API - Full-Stack CRUD Application
 
 A comprehensive REST API built with Erlang/OTP, featuring a modern Material Design frontend and complete API documentation.
@@ -9,26 +26,6 @@ A comprehensive REST API built with Erlang/OTP, featuring a modern Material Desi
 **📂 Project Location:** [`todo_api/`](todo_api/)
 
 ---
-
-## ✨ Key Features
-
-### Backend (Erlang/OTP)
-- ✅ **RESTful CRUD Operations** - Complete Create, Read, Update, Delete
-- ✅ **Advanced Filtering** - Search, pagination, sorting, tags
-- ✅ **Rate Limiting** - Protect API from abuse
-- ✅ **Statistics Dashboard** - Real-time analytics
-- ✅ **Audit Log** - Track all changes and history
-- ✅ **Priority & Due Dates** - Task management features
-- ✅ **Soft Delete** - Safe deletion with restore capability
-- ✅ **Bulk Operations** - Complete or delete multiple tasks at once
-
-### Tech Stack
-- **Backend:** Erlang/OTP 26, Elli HTTP framework, Mnesia database
-- **Frontend:** Vanilla JavaScript, Material Design, Poppins font
-- **Tools:** Postman Collection, EUnit tests, Shell scripts
-
----
-
 ## 🎥 Demo Videos
 
 ### Postman API Testing
@@ -49,6 +46,23 @@ Add your frontend demo video here:
 
 ---
 
+## ✨ Key Features
+
+### Backend (Erlang/OTP)
+- ✅ **RESTful CRUD Operations** - Complete Create, Read, Update, Delete
+- ✅ **Advanced Filtering** - Search, pagination, sorting, tags
+- ✅ **Rate Limiting** - Protect API from abuse
+- ✅ **Statistics Dashboard** - Real-time analytics
+- ✅ **Audit Log** - Track all changes and history
+- ✅ **Priority & Due Dates** - Task management features
+- ✅ **Soft Delete** - Safe deletion with restore capability
+- ✅ **Bulk Operations** - Complete or delete multiple tasks at once
+
+### Tech Stack
+- **Backend:** Erlang/OTP 26, Elli HTTP framework, Mnesia database
+- **Frontend:** Vanilla JavaScript, Material Design, Poppins font
+- **Tools:** Postman Collection, EUnit tests, Shell scripts
+
 ## 📚 Documentation
 
 For complete API documentation, endpoints reference, and setup instructions:
@@ -63,22 +77,6 @@ For complete API documentation, endpoints reference, and setup instructions:
 
 ---
 
-## 🤔 JavaScript vs Erlang: My Experience
-Honestly? Picking up Erlang after years of JavaScript has been one of those unexpected but very welcome perspective shifts in my career.
-
-The first big change was pattern matching. Instead of navigating endless if/else branches, you just describe the shape of the data and let the language route the logic. It keeps your code focused, declarative, and way easier to reason about — something I didn’t realize I’d been missing until I used it.
-
-Immutability across the board also surprised me. At first it felt limiting, but it quickly became a feature I appreciated. It forces cleaner thinking, eliminates entire categories of side-effect bugs, and makes debugging feel like less of a detective novel and more of a checklist.
-
-And then there’s the classic “let it crash” mindset. Coming from JS, where you tend to bubble-wrap everything in try/catch, Erlang’s supervision model felt almost rebellious. But once you see the resilience you get out of it, it clicks — the system becomes self-healing instead of you micromanaging every failure.
-
-Recursion as the primary iteration tool definitely pushed me out of my comfort zone. Tail-call optimization almost felt like a cheat code once I wrapped my head around it.
-
-But concurrency is where Erlang really shines. After working with it, you understand why Erlang systems run telecom infrastructure and still feel timeless.
-
-Overall, learning Erlang expanded the way I think about design, reliability, and distributed systems. It’s one of those languages that doesn’t just add a tool to your stack — it shifts your mental model. And honestly, that’s been the best part.
-
----
 
 ## 🚀 Quick Start
 
@@ -121,30 +119,10 @@ open public/index.html
 - ✅ Implement HTTP request handling with Elli
 - ✅ Master pattern matching and recursion
 - ✅ Build concurrent, fault-tolerant systems
-- ✅ Create a modern frontend to consume the API
-- ✅ Apply Material Design principles
+- ✅ Create a frontend to consume the API
 - ✅ Write comprehensive documentation
-
----
-
-## 📝 License
-
-MIT License - Feel free to use this for learning!
-
----
 
 ## 🙏 Acknowledgments
 
 Built while learning Erlang, inspired by the need for a simple yet powerful TODO API that showcases the best of both Erlang backend and modern frontend design.
 
-**Special thanks to:**
-- The Erlang/OTP team for an amazing language
-- Elli framework for simplicity
-- Material Design for UI inspiration
-- TigerConnect for color palette inspiration
-
----
-
-**Happy Coding! 🎉**
-
-*If you're also learning Erlang, feel free to use this as a reference. We're all in this together!* 💪

@@ -119,17 +119,100 @@ create_todo '{
     "tags": ["conference", "presentation", "erlang"]
 }'
 
+# Additional tasks for more comprehensive demo
+curl -X POST http://localhost:8000/todos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Refactor Authentication Module",
+    "description": "Improve security and add JWT token refresh logic",
+    "priority": "high",
+    "due_date": "18/12/2025",
+    "tags": ["refactoring", "security", "backend", "jwt", "authentication"]
+  }'
+
+curl -X POST http://localhost:8000/todos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Client Demo Presentation",
+    "description": "Prepare slides and demo environment for client meeting",
+    "priority": "urgent",
+    "due_date": "14/12/2025 14:00:00",
+    "tags": ["presentation", "client", "demo", "sales"]
+  }'
+
+curl -X POST http://localhost:8000/todos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Learn Pattern Matching in Erlang",
+    "description": "Deep dive into Erlang pattern matching and guards",
+    "priority": "medium",
+    "due_date": "30/12/2025",
+    "tags": ["learning", "erlang", "patterns", "functional-programming"]
+  }'
+
+curl -X POST http://localhost:8000/todos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Setup CI/CD Pipeline",
+    "description": "Configure GitHub Actions for automated testing and deployment",
+    "priority": "high",
+    "due_date": "22/12/2025",
+    "tags": ["devops", "ci-cd", "automation", "github-actions"]
+  }'
+
+curl -X POST http://localhost:8000/todos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Weekly Newsletter",
+    "description": "Write and send team newsletter with updates",
+    "priority": "low",
+    "due_date": "13/12/2025",
+    "tags": ["communication", "team", "newsletter"]
+  }'
+
+curl -X POST http://localhost:8000/todos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Implement WebSocket Real-time Updates",
+    "description": "Add real-time notifications using WebSockets",
+    "priority": "medium",
+    "due_date": "28/12/2025",
+    "tags": ["websockets", "real-time", "backend", "feature"]
+  }'
+
+curl -X POST http://localhost:8000/todos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Performance Monitoring Setup",
+    "description": "Integrate monitoring tools and set up dashboards",
+    "priority": "high",
+    "due_date": "19/12/2025",
+    "tags": ["monitoring", "performance", "observability", "devops"]
+  }'
+
+curl -X POST http://localhost:8000/todos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Lunch with Design Team",
+    "description": "Discuss Q1 2025 design system updates",
+    "priority": "low",
+    "due_date": "16/12/2025 12:30:00",
+    "tags": ["meeting", "design", "team", "social"]
+  }'
+
 echo ""
 echo "======================================"
 echo "✅ Demo data seeded successfully!"
 echo ""
-echo "📊 Created 12 sample tasks with:"
-echo "   • 3 Urgent/High priority tasks"
+echo "📊 Created 20 sample tasks with:"
+echo "   • All 4 priority levels"
 echo "   • Various due dates"
 echo "   • Multiple tags per task"
-echo "   • Different categories"
+echo "   • Different categories (devops, learning, meetings, etc.)"
 echo ""
 echo "🌐 Open the frontend: public/index.html"
 echo "📡 API running at: $API_URL"
 echo ""
+echo "🎬 Ready for your demo!"
+echo "======================================"
 

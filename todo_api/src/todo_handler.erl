@@ -371,15 +371,19 @@ parse_int(Binary, Default) when is_binary(Binary) ->
 parse_int(_, Default) ->
     Default.
 
-%% @doc Search todos by keyword in title or description
+%% @doc Search todos by keyword in title, description, and tags
 search_todos(Keyword) ->
     {ok, AllTodos} = todo_db:read_all(),
     LowerKeyword = string:lowercase(Keyword),
     lists:filter(fun(Todo) ->
         Title = string:lowercase(maps:get(<<"title">>, Todo, <<>>)),
         Description = string:lowercase(maps:get(<<"description">>, Todo, <<>>)),
+        Tags = maps:get(<<"tags">>, Todo, []),
+        TagsString = string:lowercase(iolist_to_binary(lists:join(<<" ">>, Tags))),
+        
         string:find(Title, LowerKeyword) =/= nomatch orelse
-        string:find(Description, LowerKeyword) =/= nomatch
+        string:find(Description, LowerKeyword) =/= nomatch orelse
+        string:find(TagsString, LowerKeyword) =/= nomatch
     end, AllTodos).
 
 %% @doc Create JSON response with CORS headers

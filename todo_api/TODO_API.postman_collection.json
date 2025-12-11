@@ -1,0 +1,322 @@
+{
+	"info": {
+		"_postman_id": "todo-api-erlang-v2",
+		"name": "TODO API - Erlang (Advanced)",
+		"description": "Complete REST API for managing TODO items with advanced features:\n- Full CRUD operations\n- Tags system\n- Priority levels (low, medium, high, urgent)\n- Due dates\n- Soft delete + restore\n- Bulk operations\n- Audit log/history\n- Advanced sorting\n- Rate limiting\n- Statistics dashboard\n- CORS support\n- Pagination & Search\n\n## Base URL\nhttp://localhost:8000\n\n## New Features\n✨ Tags system\n✨ Priority & Due Dates  \n✨ Audit log (history tracking)\n✨ Advanced sorting\n✨ Rate limiting (100 req/min)\n✨ Statistics endpoint\n\n## Documentation\nhttps://github.com/tc-ihernandez/erlang-journey/tree/main/todo_api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Basic Operations",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "Create TODO with Advanced Fields",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Learn Erlang OTP\",\n  \"description\": \"Master supervision trees and gen_server\",\n  \"tags\": [\"learning\", \"erlang\", \"otp\"],\n  \"priority\": \"high\",\n  \"due_date\": \"12/12/2025\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/todos",
+							"host": ["{{base_url}}"],
+							"path": ["todos"]
+						}
+					}
+				},
+				{
+					"name": "Get All TODOs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos",
+							"host": ["{{base_url}}"],
+							"path": ["todos"]
+						}
+					}
+				},
+				{
+					"name": "Get TODO by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update TODO",
+					"request": {
+						"method": "PUT",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Mastered Erlang OTP\",\n  \"completed\": true,\n  \"priority\": \"urgent\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Soft Delete TODO",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Permanent Delete TODO",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}?permanent=true",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}"],
+							"query": [{"key": "permanent", "value": "true"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Advanced Features",
+			"item": [
+				{
+					"name": "Get Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Get All Tags",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/tags",
+							"host": ["{{base_url}}"],
+							"path": ["tags"]
+						}
+					}
+				},
+				{
+					"name": "Filter by Tags",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?tags=erlang,learning",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [{"key": "tags", "value": "erlang,learning"}]
+						}
+					}
+				},
+				{
+					"name": "Sort by Priority (desc)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?sort_by=priority&order=desc",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [
+								{"key": "sort_by", "value": "priority"},
+								{"key": "order", "value": "desc"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Sort by Due Date (asc)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?sort_by=due_date&order=asc",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [
+								{"key": "sort_by", "value": "due_date"},
+								{"key": "order", "value": "asc"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Restore Deleted TODO",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}/restore",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}", "restore"]
+						}
+					}
+				},
+				{
+					"name": "Bulk Complete",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ids\": [1, 2, 3, 4, 5]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/todos/bulk-complete",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "bulk-complete"]
+						}
+					}
+				},
+				{
+					"name": "Bulk Delete",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ids\": [10, 11, 12]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/todos/bulk-delete",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "bulk-delete"]
+						}
+					}
+				},
+				{
+					"name": "Get TODO History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos/{{todo_id}}/history",
+							"host": ["{{base_url}}"],
+							"path": ["todos", "{{todo_id}}", "history"]
+						}
+					}
+				},
+				{
+					"name": "Get All Audit History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/audit",
+							"host": ["{{base_url}}"],
+							"path": ["api", "audit"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Filters & Pagination",
+			"item": [
+				{
+					"name": "Get Completed TODOs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?completed=true",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [{"key": "completed", "value": "true"}]
+						}
+					}
+				},
+				{
+					"name": "Get Pending TODOs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?completed=false",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [{"key": "completed", "value": "false"}]
+						}
+					}
+				},
+				{
+					"name": "Paginated TODOs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "limit", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Search TODOs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/todos?search=erlang",
+							"host": ["{{base_url}}"],
+							"path": ["todos"],
+							"query": [{"key": "search", "value": "erlang"}]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "todo_id",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}

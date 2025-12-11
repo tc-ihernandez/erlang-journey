@@ -43,7 +43,7 @@ async function loadTodos() {
         displayTodos(data.todos || []);
     } catch (error) {
         console.error('Error loading todos:', error);
-        document.getElementById('todoList').innerHTML = '<div class="empty">❌ Error loading tasks</div>';
+        document.getElementById('todoList').innerHTML = '<div class="empty"><span class="material-icons" style="font-size: 48px; color: #e31837;">error</span><p>Error loading tasks</p></div>';
     }
 }
 
@@ -51,7 +51,7 @@ function displayTodos(todos) {
     const todoList = document.getElementById('todoList');
     
     if (todos.length === 0) {
-        todoList.innerHTML = '<div class="empty">📭 No tasks to display</div>';
+        todoList.innerHTML = '<div class="empty"><span class="material-icons" style="font-size: 48px; opacity: 0.5;">inbox</span><p>No tasks to display</p></div>';
         return;
     }
 
@@ -83,11 +83,13 @@ function createTodoHTML(todo) {
             <div class="todo-actions">
                 ${!todo.completed ? `
                     <button class="btn btn-small btn-success" onclick="completeTodo(${todo.id})">
-                        ✓ Complete
+                        <span class="material-icons" style="font-size: 14px; vertical-align: middle;">check_circle</span>
+                        Complete
                     </button>
                 ` : ''}
                 <button class="btn btn-small btn-danger" onclick="deleteTodo(${todo.id})">
-                    🗑️ Delete
+                    <span class="material-icons" style="font-size: 14px; vertical-align: middle;">delete</span>
+                    Delete
                 </button>
             </div>
         </div>

@@ -10,7 +10,7 @@
     <div class="container">
         <!-- Header -->
         <header>
-            <h1>📝 TODO API - Erlang</h1>
+            <h1><span class="material-icons" style="font-size: 2.5rem; vertical-align: middle; margin-right: 10px;">checklist</span>TODO API - Erlang</h1>
         </header>
 
         <!-- Statistics Dashboard -->
@@ -37,7 +37,7 @@
         <div class="main-content">
             <!-- Create TODO Form -->
             <div class="card">
-                <h2>➕ New Task</h2>
+                <h2><span class="material-icons" style="font-size: 1.5rem; vertical-align: middle; margin-right: 8px;">add_circle</span>New Task</h2>
                 <form id="todoForm">
                     <div class="form-group">
                         <label for="title">Title *</label>
@@ -69,13 +69,16 @@
                         <input type="text" id="tags" placeholder="e.g: work, urgent, important">
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">Create Task</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="material-icons" style="font-size: 18px; vertical-align: middle; margin-right: 6px;">add</span>
+                        Create Task
+                    </button>
                 </form>
             </div>
 
             <!-- TODO List -->
             <div class="card">
-                <h2>📋 My Tasks</h2>
+                <h2><span class="material-icons" style="font-size: 1.5rem; vertical-align: middle; margin-right: 8px;">list_alt</span>My Tasks</h2>
                 
                 <!-- Filters -->
                 <div class="todo-filters">

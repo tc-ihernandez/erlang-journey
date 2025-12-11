@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Validate title
         if (!title) {
-            alert('⚠️ Title is required');
+            showNotification('⚠️ Title is required', 'error');
             return;
         }
         
@@ -206,26 +206,27 @@ async function completeTodo(id) {
 // Delete TODO
 // ===================================
 async function deleteTodo(id) {
-    if (!confirm('🗑️ Are you sure you want to delete this task?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_URL}/todos/${id}`, {
-            method: 'DELETE'
-        });
+    showConfirm(
+        'Are you sure you want to delete this task? This action cannot be undone.',
+        async () => {
+            try {
+                const response = await fetch(`${API_URL}/todos/${id}`, {
+                    method: 'DELETE'
+                });
 
-        if (response.ok) {
-            loadTodos();
-            loadStats();
-            showNotification('🗑️ Task deleted', 'success');
-        } else {
-            showNotification('❌ Error deleting task', 'error');
+                if (response.ok) {
+                    loadTodos();
+                    loadStats();
+                    showNotification('Task deleted successfully', 'success');
+                } else {
+                    showNotification('Error deleting task', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting todo:', error);
+                showNotification('Connection error', 'error');
+            }
         }
-    } catch (error) {
-        console.error('Error deleting todo:', error);
-        showNotification('❌ Connection error', 'error');
-    }
+    );
 }
 
 // ===================================
@@ -243,8 +244,62 @@ function escapeHtml(text) {
 }
 
 function showNotification(message, type) {
-    // Simple alert for now, could be replaced with a toast notification
-    alert(message);
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    const icon = type === 'success' ? '✅' : '❌';
+    
+    notification.innerHTML = `
+        <div class="notification-icon">${icon}</div>
+        <div class="notification-message">${message}</div>
+        <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 3000);
+}
+
+function showConfirm(message, onConfirm, onCancel) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    
+    overlay.innerHTML = `
+        <div class="modal">
+            <div class="modal-header">Confirm Action</div>
+            <div class="modal-body">${message}</div>
+            <div class="modal-actions">
+                <button class="btn btn-small" id="modal-cancel">Cancel</button>
+                <button class="btn btn-small btn-danger" id="modal-confirm">Delete</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    document.getElementById('modal-cancel').onclick = () => {
+        overlay.remove();
+        if (onCancel) onCancel();
+    };
+    
+    document.getElementById('modal-confirm').onclick = () => {
+        overlay.remove();
+        if (onConfirm) onConfirm();
+    };
+    
+    // Close on overlay click
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            overlay.remove();
+            if (onCancel) onCancel();
+        }
+    };
 }
 
 // ===================================

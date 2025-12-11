@@ -1,6 +1,8 @@
 /* ===================================
    Global Styles
    =================================== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -8,8 +10,9 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #1a5f7a 0%, #0d3b4f 100%);
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 300;
+    background: linear-gradient(135deg, #3ca0c7 0%, #6bb1ce 100%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -67,11 +70,13 @@ header p {
     color: #e31837;
     font-size: 2rem;
     margin-bottom: 5px;
+    font-weight: 500;
 }
 
 .stat-card p {
     color: #666;
     font-size: 0.9rem;
+    font-weight: 300;
 }
 
 /* ===================================
@@ -95,6 +100,8 @@ header p {
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 2px solid #e31837;
+    font-weight: 400;
+    letter-spacing: 0.5px;
 }
 
 /* ===================================

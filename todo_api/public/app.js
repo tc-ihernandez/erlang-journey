@@ -43,7 +43,7 @@ async function loadTodos() {
         displayTodos(data.todos || []);
     } catch (error) {
         console.error('Error loading todos:', error);
-        document.getElementById('todoList').innerHTML = '<div class="empty">❌ Error al cargar tareas</div>';
+        document.getElementById('todoList').innerHTML = '<div class="empty">❌ Error loading tasks</div>';
     }
 }
 
@@ -51,7 +51,7 @@ function displayTodos(todos) {
     const todoList = document.getElementById('todoList');
     
     if (todos.length === 0) {
-        todoList.innerHTML = '<div class="empty">📭 No hay tareas para mostrar</div>';
+        todoList.innerHTML = '<div class="empty">📭 No tasks to display</div>';
         return;
     }
 
@@ -73,21 +73,21 @@ function createTodoHTML(todo) {
             
             <div class="todo-meta">
                 ${tags}
-                ${todo.due_date ? `<span class="todo-date">📅 Vence: ${todo.due_date}</span>` : ''}
+                ${todo.due_date ? `<span class="todo-date">📅 Due: ${todo.due_date}</span>` : ''}
             </div>
             
             <div class="todo-date">
-                ⏰ Creado: ${todo.created_at}
+                ⏰ Created: ${todo.created_at}
             </div>
             
             <div class="todo-actions">
                 ${!todo.completed ? `
                     <button class="btn btn-small btn-success" onclick="completeTodo(${todo.id})">
-                        ✓ Completar
+                        ✓ Complete
                     </button>
                 ` : ''}
                 <button class="btn btn-small btn-danger" onclick="deleteTodo(${todo.id})">
-                    🗑️ Eliminar
+                    🗑️ Delete
                 </button>
             </div>
         </div>
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Validate title
         if (!title) {
-            alert('⚠️ El título es obligatorio');
+            alert('⚠️ Title is required');
             return;
         }
         
@@ -164,14 +164,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.reset();
                 loadTodos();
                 loadStats();
-                showNotification('✅ Tarea creada exitosamente!', 'success');
+                showNotification('✅ Task created successfully!', 'success');
             } else {
                 const error = await response.json();
-                showNotification('❌ Error: ' + (error.error || 'Error desconocido'), 'error');
+                showNotification('❌ Error: ' + (error.error || 'Unknown error'), 'error');
             }
         } catch (error) {
             console.error('Error creating todo:', error);
-            showNotification('❌ Error de conexión con el servidor', 'error');
+            showNotification('❌ Server connection error', 'error');
         }
     });
 });
@@ -192,13 +192,13 @@ async function completeTodo(id) {
         if (response.ok) {
             loadTodos();
             loadStats();
-            showNotification('✅ Tarea completada!', 'success');
+            showNotification('✅ Task completed!', 'success');
         } else {
-            showNotification('❌ Error al completar tarea', 'error');
+            showNotification('❌ Error completing task', 'error');
         }
     } catch (error) {
         console.error('Error completing todo:', error);
-        showNotification('❌ Error de conexión', 'error');
+        showNotification('❌ Connection error', 'error');
     }
 }
 
@@ -206,7 +206,7 @@ async function completeTodo(id) {
 // Delete TODO
 // ===================================
 async function deleteTodo(id) {
-    if (!confirm('🗑️ ¿Estás seguro de eliminar esta tarea?')) {
+    if (!confirm('🗑️ Are you sure you want to delete this task?')) {
         return;
     }
     
@@ -218,13 +218,13 @@ async function deleteTodo(id) {
         if (response.ok) {
             loadTodos();
             loadStats();
-            showNotification('🗑️ Tarea eliminada', 'success');
+            showNotification('🗑️ Task deleted', 'success');
         } else {
-            showNotification('❌ Error al eliminar tarea', 'error');
+            showNotification('❌ Error deleting task', 'error');
         }
     } catch (error) {
         console.error('Error deleting todo:', error);
-        showNotification('❌ Error de conexión', 'error');
+        showNotification('❌ Connection error', 'error');
     }
 }
 

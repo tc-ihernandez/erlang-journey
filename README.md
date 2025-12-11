@@ -29,20 +29,15 @@ A comprehensive REST API built with Erlang/OTP, featuring a modern Material Desi
 ## 🎥 Demo Videos
 
 ### Postman API Testing
-> **Coming soon:** Video demonstration of all API endpoints using Postman
 
-<!-- 
-Add your Postman demo video here:
-[![Postman Demo](thumbnail.png)](your-video-link)
--->
+https://github.com/user-attachments/assets/1ccbdea1-7568-4fad-9279-4d1a75166bdf
+
 
 ### Frontend Demo
-> **Coming soon:** Video walkthrough of the Material Design frontend
 
-<!-- 
-Add your frontend demo video here:
-[![Frontend Demo](thumbnail.png)](your-video-link)
--->
+
+https://github.com/user-attachments/assets/1c6ffccd-9034-4724-95b9-7534324a57d3
+
 
 ---
 
@@ -76,8 +71,6 @@ For complete API documentation, endpoints reference, and setup instructions:
 - [Postman Collection](todo_api/TODO_API.postman_collection.json) - Ready to import
 
 ---
-
-
 ## 🚀 Quick Start
 
 ```bash
@@ -98,18 +91,6 @@ open public/index.html
 ```
 
 **Server runs on:** `http://localhost:8000`
-
----
-
-## 📊 Project Stats
-
-- **Lines of Erlang Code:** ~2,000+
-- **API Endpoints:** 21
-- **Tests:** EUnit suite included
-- **Demo Tasks:** 20 sample records
-- **Documentation Pages:** 6
-
----
 
 ## 🎯 Learning Goals
 

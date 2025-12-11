@@ -35,11 +35,14 @@ header h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    font-weight: 300;
+    letter-spacing: 1px;
 }
 
 header p {
     font-size: 1.1rem;
     opacity: 0.9;
+    font-weight: 300;
 }
 
 /* ===================================
@@ -115,7 +118,9 @@ label {
     display: block;
     margin-bottom: 5px;
     color: #555;
-    font-weight: 500;
+    font-weight: 400;
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
 }
 
 input, textarea, select {
@@ -125,7 +130,8 @@ input, textarea, select {
     border-radius: 5px;
     font-size: 14px;
     transition: border-color 0.3s;
-    font-family: inherit;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 300;
 }
 
 input:focus, textarea:focus, select:focus {
@@ -146,10 +152,12 @@ textarea {
     border: none;
     border-radius: 5px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 400;
     cursor: pointer;
     transition: all 0.3s;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Poppins', sans-serif;
 }
 
 .btn-primary {
@@ -244,8 +252,9 @@ textarea {
 
 .todo-title {
     font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: 500;
     color: #2d3748;
+    letter-spacing: 0.3px;
 }
 
 .todo-item.completed .todo-title {
@@ -255,7 +264,8 @@ textarea {
 .todo-description {
     color: #718096;
     margin: 10px 0;
-    line-height: 1.5;
+    line-height: 1.6;
+    font-weight: 300;
 }
 
 .todo-meta {

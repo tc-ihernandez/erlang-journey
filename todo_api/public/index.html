@@ -4,312 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TODO API - Erlang Frontend</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        .stat-card h3 {
-            color: #667eea;
-            font-size: 2rem;
-            margin-bottom: 5px;
-        }
-
-        .stat-card p {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .card h2 {
-            color: #333;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: 500;
-        }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-            width: 100%;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 12px;
-            margin-right: 5px;
-        }
-
-        .btn-success {
-            background: #48bb78;
-            color: white;
-        }
-
-        .btn-danger {
-            background: #f56565;
-            color: white;
-        }
-
-        .btn-warning {
-            background: #ed8936;
-            color: white;
-        }
-
-        .todo-filters {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .todo-filters select, .todo-filters input {
-            flex: 1;
-            min-width: 150px;
-        }
-
-        .todo-item {
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 4px solid #667eea;
-            transition: all 0.3s;
-        }
-
-        .todo-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .todo-item.completed {
-            opacity: 0.7;
-            border-left-color: #48bb78;
-        }
-
-        .todo-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 10px;
-        }
-
-        .todo-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #2d3748;
-        }
-
-        .todo-item.completed .todo-title {
-            text-decoration: line-through;
-        }
-
-        .todo-meta {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin: 10px 0;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .badge-urgent {
-            background: #fed7d7;
-            color: #c53030;
-        }
-
-        .badge-high {
-            background: #feebc8;
-            color: #c05621;
-        }
-
-        .badge-medium {
-            background: #bee3f8;
-            color: #2c5282;
-        }
-
-        .badge-low {
-            background: #c6f6d5;
-            color: #276749;
-        }
-
-        .tag {
-            background: #e6fffa;
-            color: #234e52;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-        }
-
-        .todo-actions {
-            display: flex;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        .todo-date {
-            font-size: 12px;
-            color: #718096;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #667eea;
-            font-size: 1.2rem;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 40px;
-            color: #a0aec0;
-        }
-
-        .tags-input {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            margin-top: 5px;
-        }
-
-        .tags-input input {
-            flex: 1;
-            min-width: 150px;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-
-            .stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            header h1 {
-                font-size: 1.8rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <header>
             <h1>📝 TODO API - Erlang</h1>
             <p>Gestiona tus tareas con estilo</p>
         </header>
 
+        <!-- Statistics Dashboard -->
         <div class="stats" id="stats">
             <div class="stat-card">
                 <h3 id="stat-total">0</h3>
@@ -329,7 +34,9 @@
             </div>
         </div>
 
+        <!-- Main Content -->
         <div class="main-content">
+            <!-- Create TODO Form -->
             <div class="card">
                 <h2>➕ Nueva Tarea</h2>
                 <form id="todoForm">
@@ -337,10 +44,12 @@
                         <label for="title">Título *</label>
                         <input type="text" id="title" required placeholder="ej: Estudiar Erlang">
                     </div>
+                    
                     <div class="form-group">
                         <label for="description">Descripción</label>
                         <textarea id="description" placeholder="Detalles de la tarea..."></textarea>
                     </div>
+                    
                     <div class="form-group">
                         <label for="priority">Prioridad</label>
                         <select id="priority">
@@ -350,34 +59,44 @@
                             <option value="urgent">🔴 Urgente</option>
                         </select>
                     </div>
+                    
                     <div class="form-group">
                         <label for="due_date">Fecha de Vencimiento</label>
                         <input type="date" id="due_date">
                     </div>
+                    
                     <div class="form-group">
                         <label for="tags">Tags (separados por coma)</label>
                         <input type="text" id="tags" placeholder="ej: trabajo, urgente, importante">
                     </div>
+                    
                     <button type="submit" class="btn btn-primary">Crear Tarea</button>
                 </form>
             </div>
 
+            <!-- TODO List -->
             <div class="card">
                 <h2>📋 Mis Tareas</h2>
+                
+                <!-- Filters -->
                 <div class="todo-filters">
                     <select id="filterStatus" onchange="loadTodos()">
                         <option value="">Todas</option>
                         <option value="false">Pendientes</option>
                         <option value="true">Completadas</option>
                     </select>
+                    
                     <select id="sortBy" onchange="loadTodos()">
                         <option value="">Sin ordenar</option>
                         <option value="priority">Por Prioridad</option>
                         <option value="due_date">Por Fecha</option>
                         <option value="created_at">Por Creación</option>
                     </select>
+                    
                     <input type="text" id="searchBox" placeholder="Buscar..." onkeyup="searchTodos()">
                 </div>
+                
+                <!-- TODO Items Container -->
                 <div id="todoList">
                     <div class="loading">Cargando tareas...</div>
                 </div>
@@ -385,198 +104,7 @@
         </div>
     </div>
 
-    <script>
-        const API_URL = 'http://localhost:8000';
-
-        // Load stats
-        async function loadStats() {
-            try {
-                const response = await fetch(`${API_URL}/api/stats`);
-                const data = await response.json();
-                document.getElementById('stat-total').textContent = data.total;
-                document.getElementById('stat-completed').textContent = data.completed;
-                document.getElementById('stat-pending').textContent = data.pending;
-                document.getElementById('stat-rate').textContent = data.completion_rate.toFixed(1) + '%';
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
-        }
-
-        // Load todos
-        async function loadTodos() {
-            const status = document.getElementById('filterStatus').value;
-            const sortBy = document.getElementById('sortBy').value;
-            
-            let url = `${API_URL}/todos`;
-            const params = [];
-            
-            if (status) params.push(`completed=${status}`);
-            if (sortBy) params.push(`sort_by=${sortBy}&order=desc`);
-            
-            if (params.length > 0) {
-                url += '?' + params.join('&');
-            }
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                displayTodos(data.todos || []);
-            } catch (error) {
-                console.error('Error loading todos:', error);
-                document.getElementById('todoList').innerHTML = '<div class="empty">Error al cargar tareas</div>';
-            }
-        }
-
-        // Display todos
-        function displayTodos(todos) {
-            const todoList = document.getElementById('todoList');
-            
-            if (todos.length === 0) {
-                todoList.innerHTML = '<div class="empty">No hay tareas para mostrar</div>';
-                return;
-            }
-
-            todoList.innerHTML = todos.map(todo => {
-                const priorityClass = `badge-${todo.priority}`;
-                const tags = todo.tags.map(tag => `<span class="tag">#${tag}</span>`).join('');
-                
-                return `
-                    <div class="todo-item ${todo.completed ? 'completed' : ''}">
-                        <div class="todo-header">
-                            <div class="todo-title">${todo.title}</div>
-                            <span class="badge ${priorityClass}">${todo.priority}</span>
-                        </div>
-                        ${todo.description ? `<p style="color: #718096; margin: 10px 0;">${todo.description}</p>` : ''}
-                        <div class="todo-meta">
-                            ${tags}
-                            ${todo.due_date ? `<span class="todo-date">📅 Vence: ${todo.due_date}</span>` : ''}
-                        </div>
-                        <div class="todo-date">
-                            Creado: ${todo.created_at}
-                        </div>
-                        <div class="todo-actions">
-                            ${!todo.completed ? `
-                                <button class="btn btn-small btn-success" onclick="completeTodo(${todo.id})">✓ Completar</button>
-                            ` : ''}
-                            <button class="btn btn-small btn-danger" onclick="deleteTodo(${todo.id})">🗑️ Eliminar</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Search todos
-        function searchTodos() {
-            const search = document.getElementById('searchBox').value;
-            if (search.length >= 2) {
-                fetch(`${API_URL}/todos?search=${search}`)
-                    .then(res => res.json())
-                    .then(data => displayTodos(data.todos || []))
-                    .catch(err => console.error('Search error:', err));
-            } else if (search.length === 0) {
-                loadTodos();
-            }
-        }
-
-        // Create todo
-        document.getElementById('todoForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const title = document.getElementById('title').value;
-            const description = document.getElementById('description').value;
-            const priority = document.getElementById('priority').value;
-            const due_date_input = document.getElementById('due_date').value;
-            const tags_input = document.getElementById('tags').value;
-            
-            // Convert date format
-            let due_date = null;
-            if (due_date_input) {
-                const [year, month, day] = due_date_input.split('-');
-                due_date = `${day}/${month}/${year}`;
-            }
-            
-            // Parse tags
-            const tags = tags_input ? tags_input.split(',').map(t => t.trim()).filter(t => t) : [];
-            
-            const todo = {
-                title,
-                description,
-                priority,
-                due_date,
-                tags
-            };
-
-            try {
-                const response = await fetch(`${API_URL}/todos`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(todo)
-                });
-
-                if (response.ok) {
-                    document.getElementById('todoForm').reset();
-                    loadTodos();
-                    loadStats();
-                    alert('✅ Tarea creada exitosamente!');
-                } else {
-                    alert('❌ Error al crear tarea');
-                }
-            } catch (error) {
-                console.error('Error creating todo:', error);
-                alert('❌ Error de conexión');
-            }
-        });
-
-        // Complete todo
-        async function completeTodo(id) {
-            try {
-                const response = await fetch(`${API_URL}/todos/${id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ completed: true })
-                });
-
-                if (response.ok) {
-                    loadTodos();
-                    loadStats();
-                }
-            } catch (error) {
-                console.error('Error completing todo:', error);
-            }
-        }
-
-        // Delete todo
-        async function deleteTodo(id) {
-            if (confirm('¿Estás seguro de eliminar esta tarea?')) {
-                try {
-                    const response = await fetch(`${API_URL}/todos/${id}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (response.ok) {
-                        loadTodos();
-                        loadStats();
-                    }
-                } catch (error) {
-                    console.error('Error deleting todo:', error);
-                }
-            }
-        }
-
-        // Initial load
-        loadStats();
-        loadTodos();
-
-        // Auto refresh every 30 seconds
-        setInterval(() => {
-            loadStats();
-            loadTodos();
-        }, 30000);
-    </script>
+    <!-- JavaScript -->
+    <script src="app.js"></script>
 </body>
 </html>
-
